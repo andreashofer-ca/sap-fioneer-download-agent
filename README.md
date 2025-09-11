@@ -72,10 +72,8 @@ A secure, modern web application for downloading files from Artifactory with use
    npm start
    ```
 
-5. **Open the application**:
-   ```
-   http://localhost:3000/filelist.html
-   ```
+5. **Open the test harness**:
+   Open the `filelist.html` file locally with appropriately configured token.
 
 ## Configuration
 
