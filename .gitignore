@@ -11,6 +11,9 @@ yarn-error.log*
 .env.test.local
 .env.production.local
 
+# Files with hardcoded secrets (use .example versions)
+filelist.html
+
 # Runtime data
 pids
 *.pid

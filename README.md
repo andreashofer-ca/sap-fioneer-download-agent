@@ -61,7 +61,13 @@ A secure, modern web application for downloading files from Artifactory with use
    # Edit .env with your Artifactory details
    ```
 
-4. **Start the server**:
+4. **Configure test harness**:
+   ```bash
+   cp filelist.html.example filelist.html
+   # Edit filelist.html and add your token if needed
+   ```
+
+5. **Start the server**:
    ```bash
    npm start
    ```
@@ -158,11 +164,11 @@ curl -H "Authorization: Bearer your_token" http://localhost:3000/token-attribute
 ### Project Structure
 ```
 ├── server.js              # Express server with API endpoints
-├── filelist.html          # Test harness interface
+├── filelist.html.example   # Test harness template (copy to filelist.html)
 ├── public/
 │   └── download.html       # Download agent popup
 ├── package.json           # Node.js dependencies
-├── .env                   # Environment configuration
+├── .env.example           # Environment template
 └── README.md              # This file
 ```
 
@@ -187,6 +193,13 @@ curl -H "Authorization: Bearer your_token" http://localhost:3000/token-attribute
 - ✅ **Input Validation**: File path and token validation
 - ✅ **Error Handling**: Secure error messages without information leakage
 - ✅ **Environment Variables**: Sensitive data in environment configuration
+- ✅ **Template Files**: Sensitive files (.gitignored) with .example templates
+
+### Important Security Notes
+
+- Never commit `filelist.html` or `.env` files with real tokens
+- Always use the `.example` template files and copy them locally
+- Keep your Artifactory tokens secure and rotate them regularly
 
 ## Browser Support
 
