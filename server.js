@@ -6,27 +6,33 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Artifactory configuration
+const ARTIFACTORY_URL = process.env.ARTIFACTORY_URL;
+
 /**
- * SAP Fioneer Download Agent
+ * SAP Fioneer Download Agent - Backend Server
  *
- * A secure web application for downloading files from Artifactory with:
- * - JWT token-based authentication via query parameters
- * - Secure CORS configuration with allowed origins only
- * - Real-time progress tracking for large files
- * - User-selectable save locations via File System Access API
- * - Streaming downloads to handle large file sizes efficiently
+ * A secure Node.js/Express server that provides a REST API for downloading files
+ * from Artifactory with JWT authentication and streaming support.
+ *
+ * Key Features:
+ * - JWT token-based authentication via Authorization headers
+ * - Secure CORS configuration with restricted origins
+ * - Streaming file downloads with progress support
+ * - Server-side HTML injection for secure token handling
  * - Comprehensive error handling and logging
+ * - Token validation and attribute checking
  *
  * Security Features:
+ * - No token exposure in URLs (secure header-based auth)
  * - CORS restricted to specific allowed origins
- * - JWT token validation
- * - Input sanitization for file paths
- * - Secure headers for downloads
+ * - Input validation and sanitization
+ * - Secure headers for all responses
  *
  * @author SAP Fioneer Team
  * @version 1.1.0
  * @license MIT
- * @updated 2025-01-18 - Enhanced CORS security
+ * @updated 2025-01-18 - Code cleanup and documentation improvements
  */
 
 // Configure allowed CORS origins for security
@@ -85,41 +91,50 @@ app.get('/', (req, res) => {
 // Route to serve the download page
 /**
  * Serves the download page with injected token and filepath
- * 
+ *
  * This endpoint serves the download.html page with the access token and
  * file path injected into the HTML for secure client-side handling.
- * 
+ *
  * @param {Object} req - Express request object
+ * @param {Object} req.headers - Request headers
+ * @param {string} req.headers.authorization - Bearer token for authentication
  * @param {Object} req.query - Query parameters
- * @param {string} req.query.token - JWT token for authentication
  * @param {string} req.query.filepath - Path of the file to download
  * @param {Object} res - Express response object
  * @returns {void} Sends the modified HTML page or error response
- * 
+ *
  * @example
- * GET /download-page?token=jwt_token&filepath=path/to/file.sar
+ * GET /download-page?filepath=path/to/file.sar
+ * Authorization: Bearer jwt_token_here
  */
 app.get('/download-page', (req, res) => {
-    const token = req.query.token;
+    // Get token from Authorization header (secure approach)
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        console.log('ERROR: No valid Authorization header provided');
+        return res.status(401).send('<h1>Error: Authorization Required</h1><p>Please provide a valid Bearer token in the Authorization header.</p><p>Example:<br><code>Authorization: Bearer your_jwt_token_here</code></p>');
+    }
+
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
     const filePath = req.query.filepath;
-    
+
     console.log('Download page requested with token:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');
     console.log('Download page requested with filepath:', filePath || 'NO FILEPATH');
-    
+
     if (!token) {
-        console.log('ERROR: No token provided to download page');
-        return res.status(400).send('<h1>Error: No access token provided</h1><p>Please launch from the test harness with a valid token.</p>');
+        console.log('ERROR: No token provided in Authorization header');
+        return res.status(401).send('<h1>Error: No Access Token</h1><p>Please provide a valid Bearer token in the Authorization header.</p>');
     }
-    
+
     if (!filePath) {
-        console.log('ERROR: No filepath provided to download page');
-        return res.status(400).send('<h1>Error: No file path provided</h1><p>Please launch from the test harness with a valid file path.</p>');
+        console.log('ERROR: No filepath provided');
+        return res.status(400).send('<h1>Error: No File Path</h1><p>Please provide a valid file path in the query parameter.</p>');
     }
     
     // Read the download.html template and inject the token and filepath
-    const fs = require('fs');
     const downloadPagePath = path.join(__dirname, 'public', 'download.html');
     
+    const fs = require('fs');
     fs.readFile(downloadPagePath, 'utf8', (err, data) => {
         if (err) {
             console.error('Error reading download page:', err);
@@ -128,14 +143,16 @@ app.get('/download-page', (req, res) => {
         
         // Inject the token and filepath into the page
         let modifiedHtml = data.replace(
-            'const accessToken = urlParams.get(\'token\');',
-            `const accessToken = '${token.replace(/'/g, "\\'")}';`
+            `// Variables to be injected by server
+        const accessToken = null; // Will be replaced by server`,
+            `// Variables to be injected by server
+        const accessToken = '${token.replace(/'/g, "\\'")}';`
         );
-        
+
         // Also inject the filepath
         modifiedHtml = modifiedHtml.replace(
-            'const filename = \'Fioneer AI Agent/REL/1.0.0/K-100COINFAA.SAR\';',
-            `const filename = '${filePath.replace(/'/g, "\\'")}';`
+            '        const filename = null; // Will be replaced by server',
+            `        const filename = '${filePath.replace(/'/g, "\\'")}';`
         );
         
         console.log('Token and filepath injected into download page successfully');
@@ -154,37 +171,55 @@ app.get('/download-page', (req, res) => {
  * them entirely into memory.
  *
  * Security Features:
- * - Validates JWT token from query parameters
+ * - Validates JWT token from Authorization header (secure)
  * - Applies secure CORS headers (restricted origins only)
  * - Sanitizes filenames to prevent path traversal
  * - Supports resumable downloads with Range headers
  *
  * @param {Object} req - Express request object
+ * @param {Object} req.headers - Request headers
+ * @param {string} req.headers.authorization - Bearer token for authentication
+ * @param {string} [req.headers.range] - Range header for resumable downloads
  * @param {Object} req.query - Query parameters
  * @param {string} req.query.filename - The filename/path to download from Artifactory
- * @param {string} req.query.token - JWT token for Artifactory authentication
- * @param {Object} req.headers - Request headers
- * @param {string} [req.headers.range] - Range header for resumable downloads
  * @param {Object} res - Express response object
  * @returns {Promise<void>} Streams the file or sends error response
  *
  * @example
- * GET /download?filename=path/to/file.sar&token=jwt_token_here
+ * GET /download?filename=path/to/file.sar
+ * Authorization: Bearer jwt_token_here
  * Range: bytes=0-1023
  */
 app.get('/download', async (req, res) => {
     try {
         // Get custom filename from query parameter or use default
         const customFilename = req.query.filename || 'Fioneer AI Agent/REL/1.0.0/K-100COINFAA.SAR';
-        
-        // Construct Artifactory URL with the custom filename
-        const artifactoryUrl = `${process.env.ARTIFACTORY_URL}download/${customFilename}`;
-        
-        // Use ONLY the custom token from query parameter - no fallback to environment
-        const token = req.query.token;
+
+        // Get token from Authorization header (secure approach)
+        const authHeader = req.headers.authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+            console.log('ERROR: No valid Authorization header provided for download');
+            return res.status(401).json({
+                error: 'Authorization required',
+                message: 'Please provide a valid Bearer token in the Authorization header',
+                code: 'MISSING_AUTH'
+            });
+        }
+
+        const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
         console.log('Download request received with token:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');
         console.log('Download request for file:', customFilename);
+        
+        // Construct Artifactory URL from filename
+        let artifactoryUrl;
+        if (ARTIFACTORY_URL) {
+            // Use the configured URL from .env file
+            artifactoryUrl = `${ARTIFACTORY_URL}${customFilename}`;
+        } else {
+            // Fallback to default URL structure
+            artifactoryUrl = `https://fioneer1.jfrog.io/artifactory/download/${customFilename}`;
+        }
         console.log('Artifactory URL:', artifactoryUrl);
 
         if (!token) {

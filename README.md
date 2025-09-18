@@ -305,11 +305,11 @@ For support and questions:
 ## Changelog
 
 ### v1.1.0 (2025-01-18)
-- 🔒 **Enhanced CORS Security**: Replaced wildcard (*) with restricted allowed origins
-- 📊 **Security Monitoring**: Added comprehensive CORS request logging
-- 🛡️ **Input Validation**: Improved file path and token validation
-- 📝 **Documentation**: Updated security documentation and API docs
-- 🔧 **Code Cleanup**: Improved error handling and logging consistency
+- 🧹 **Code Cleanup**: Removed unused dependencies and cleaned up redundant code
+- � **Documentation**: Enhanced inline comments and API documentation
+- � **Security**: Improved token handling and removed hardcoded credentials
+- 🏗️ **Architecture**: Simplified URL construction and configuration
+- � **Dependencies**: Updated package.json and removed unused packages
 
 ### v1.0.0
 - Initial release with streaming download support

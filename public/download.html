@@ -249,12 +249,16 @@
             progressText: document.getElementById('progressText')
         };
 
-        // Get token from URL parameter (will be replaced by server injection)
-        const urlParams = new URLSearchParams(window.location.search);
-        const accessToken = urlParams.get('token');
+        // Get token from server injection (secure approach)
+        // const urlParams = new URLSearchParams(window.location.search);
+        // const accessToken = urlParams.get('token');
 
         // Default filename (will be replaced by server injection)
-        const filename = 'Fioneer AI Agent/REL/1.0.0/K-100COINFAA.SAR';
+        // const filename = 'Fioneer AI Agent/REL/1.0.0/K-100COINFAA.SAR';
+
+        // Variables to be injected by server
+        const accessToken = null; // Will be replaced by server
+        const filename = null; // Will be replaced by server
 
         /**
          * Display status message to user
@@ -393,7 +397,7 @@
             }
 
             const downloadFilename = filename.split('/').pop() || 'download';
-            const downloadUrl = `/download?filename=${encodeURIComponent(filename)}&token=${encodeURIComponent(accessToken)}`;
+            const downloadUrl = `http://localhost:3000/download?filename=${encodeURIComponent(filename)}`;
             const fileId = getFileId(filename);
             
             let startByte = 0;
@@ -427,6 +431,7 @@
                 xhr.timeout = 600000; // 10 minutes
 
                 xhr.setRequestHeader('Accept', 'application/octet-stream');
+                xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
                 
                 // Add Range header for resume
                 if (startByte > 0) {
@@ -546,7 +551,7 @@
                 total,
                 filename,
                 timestamp: Date.now(),
-                url: `/download?filename=${encodeURIComponent(filename)}&token=${encodeURIComponent(accessToken)}`
+                url: `http://localhost:3000/download?filename=${encodeURIComponent(filename)}`
             };
             localStorage.setItem(`download_${fileId}`, JSON.stringify(progress));
         }
