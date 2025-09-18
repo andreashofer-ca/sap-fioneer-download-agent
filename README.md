@@ -24,7 +24,7 @@ A secure, modern web application for downloading large files from Artifactory wi
 └─────────────────┘    └──────────────────┘    └─────────────────┘
                               │
                        ┌──────────────────┐
-                       │  Download Manager  │
+                       │ Download Manager │
                        │ (download.html)  │
                        │  XMLHttpRequest  │
                        │    Streaming     │
