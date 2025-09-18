@@ -219,9 +219,7 @@ curl -H "Authorization: Bearer your_token" http://localhost:3000/token-attribute
 - **Restricted Origins**: Only allows requests from trusted domains
 - **Allowed Origins**:
   - `http://localhost:3000` (main server)
-  - `http://localhost:8080` (alternative port)
   - `http://127.0.0.1:3000` (IPv4 localhost)
-  - `http://127.0.0.1:8080` (IPv4 alternative)
   - `null` (for file:// protocol support)
 - **Request Logging**: All CORS requests are logged for security monitoring
 - **Automatic Blocking**: Requests from unauthorized origins are blocked
