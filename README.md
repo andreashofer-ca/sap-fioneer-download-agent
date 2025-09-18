@@ -1,16 +1,19 @@
 # SAP Fioneer Download Agent
 
-A secure, modern web application for downloading files from Artifactory with user-selectable save locations using the HTML5 File System Access API.
+A secure, modern web application for downloading large files from Artifactory with real-time progress tracking and user-selectable save locations using XMLHttpRequest streaming and the HTML5 File System Access API.
 
 ## Features
 
-- 🔐 **Secure Authentication**: JWT token-based authentication with Artifactory
+- � **Large File Support**: Efficient streaming downloads handle files of any size without memory issues
+- 📊 **Real-time Progress**: Live progress bars with MB/GB tracking during downloads
+- �🔐 **Secure Authentication**: JWT token-based authentication with Artifactory
 - 📁 **User-Selectable Locations**: Modern File System Access API for choosing download locations
 - 🎯 **Dynamic File Paths**: Support for complex repository structures and file paths
 - 🔍 **Token Validation**: Real-time token attribute checking with detailed logging
 - 🌐 **Cross-Browser Support**: Fallback to traditional downloads for older browsers
 - 📱 **Responsive Design**: Clean, professional UI that works on all devices
-- 🚀 **Professional Architecture**: Clean separation between test harness and download agent
+- ⚡ **Streaming Architecture**: XMLHttpRequest streaming for optimal performance
+- 🛡️ **Error Recovery**: Comprehensive error handling with user-friendly messages
 
 ## Architecture
 
@@ -23,15 +26,24 @@ A secure, modern web application for downloading files from Artifactory with use
                        ┌──────────────────┐
                        │  Download Agent  │
                        │ (download.html)  │
+                       │  XMLHttpRequest  │
+                       │    Streaming     │
                        └──────────────────┘
 ```
 
 ### Components
 
 1. **Test Harness** (`filelist.html`): Main interface for configuring downloads
-2. **Node.js Server** (`server.js`): Backend API with CORS handling and token validation
-3. **Download Agent** (`public/download.html`): Popup interface for file downloads
+2. **Node.js Server** (`server.js`): Backend API with streaming proxy and token validation
+3. **Download Agent** (`public/download.html`): Popup interface with XMLHttpRequest streaming
 4. **Environment Config** (`.env`): Secure configuration for Artifactory credentials
+
+### Streaming Architecture
+
+- **Server**: Uses `axios` with `responseType: 'stream'` to proxy large files efficiently
+- **Client**: XMLHttpRequest with `responseType: 'blob'` for streaming downloads
+- **Progress**: Real-time progress events with accurate MB/GB tracking
+- **Memory**: Minimal memory footprint regardless of file size
 
 ## Quick Start
 
@@ -171,10 +183,18 @@ curl -H "Authorization: Bearer your_token" http://localhost:3000/token-attribute
 ```
 
 ### Key Technologies
-- **Backend**: Node.js, Express.js, Axios
-- **Frontend**: Vanilla JavaScript, HTML5 File System Access API
-- **Authentication**: JWT tokens
+- **Backend**: Node.js, Express.js, Axios with streaming support
+- **Frontend**: Vanilla JavaScript, XMLHttpRequest streaming, HTML5 File System Access API
+- **Authentication**: JWT tokens with Artifactory integration
 - **Styling**: Modern CSS with professional design
+- **Streaming**: Efficient file transfer without memory constraints
+
+### Performance Features
+- **Large File Support**: Handle files of any size through streaming
+- **Real-time Progress**: Live updates with accurate size tracking
+- **Memory Efficient**: Minimal memory usage regardless of file size
+- **Network Optimized**: Direct streaming without intermediate storage
+- **Timeout Management**: Configurable timeouts for long downloads
 
 ### Code Quality Features
 - Comprehensive error handling
@@ -268,9 +288,12 @@ For support and questions:
 ## Changelog
 
 ### v1.0.0
-- Initial release
+- Initial release with streaming download support
+- Real-time progress tracking with MB/GB display
+- XMLHttpRequest streaming for large file handling
 - File System Access API integration
 - Token validation system
 - Professional UI design
 - Comprehensive error handling
 - Cross-browser compatibility
+- Memory-efficient streaming architecture

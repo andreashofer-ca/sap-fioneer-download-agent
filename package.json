@@ -1,7 +1,7 @@
 {
   "name": "sap-fioneer-download-agent",
   "version": "1.0.0",
-  "description": "A secure, modern web application for downloading files from Artifactory with user-selectable save locations using the HTML5 File System Access API",
+  "description": "A secure, modern web application for downloading large files from Artifactory with real-time progress tracking and user-selectable save locations using XMLHttpRequest streaming and the HTML5 File System Access API",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -19,8 +19,7 @@
   "dependencies": {
     "axios": "^1.12.0",
     "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "js-file-downloader": "^1.1.25"
+    "express": "^4.18.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
@@ -37,7 +36,11 @@
     "sap-fioneer",
     "node.js",
     "express",
-    "modern-web"
+    "modern-web",
+    "large-files",
+    "streaming",
+    "xhr",
+    "progress-tracking"
   ],
   "author": "SAP Fioneer Team",
   "license": "MIT",

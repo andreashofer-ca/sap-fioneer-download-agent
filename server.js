@@ -6,6 +6,20 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+/**
+ * SAP Fioneer Download Agent
+ * 
+ * A secure web application for downloading files from Artifactory with:
+ * - JWT token-based authentication
+ * - Real-time progress tracking for large files
+ * - User-selectable save locations via File System Access API
+ * - Streaming downloads to handle large file sizes efficiently
+ * 
+ * @author SAP Fioneer Team
+ * @version 1.0.0
+ * @license MIT
+ */
+
 // Add CORS headers to allow requests from file:// origins
 app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', '*');
@@ -32,6 +46,22 @@ app.get('/', (req, res) => {
 });
 
 // Route to serve the download page
+/**
+ * Serves the download page with injected token and filepath
+ * 
+ * This endpoint serves the download.html page with the access token and
+ * file path injected into the HTML for secure client-side handling.
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters
+ * @param {string} req.query.token - JWT token for authentication
+ * @param {string} req.query.filepath - Path of the file to download
+ * @param {Object} res - Express response object
+ * @returns {void} Sends the modified HTML page or error response
+ * 
+ * @example
+ * GET /download-page?token=jwt_token&filepath=path/to/file.sar
+ */
 app.get('/download-page', (req, res) => {
     const token = req.query.token;
     const filePath = req.query.filepath;
@@ -79,6 +109,23 @@ app.get('/download-page', (req, res) => {
 });
 
 // Download endpoint
+/**
+ * Downloads a file from Artifactory and streams it to the client
+ * 
+ * This endpoint proxies file downloads from Artifactory with proper authentication
+ * and streams the response to handle large files efficiently without loading
+ * them entirely into memory.
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} req.query - Query parameters
+ * @param {string} req.query.filename - The filename/path to download from Artifactory
+ * @param {string} req.query.token - JWT token for Artifactory authentication
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} Streams the file or sends error response
+ * 
+ * @example
+ * GET /download?filename=path/to/file.sar&token=jwt_token_here
+ */
 app.get('/download', async (req, res) => {
     try {
         // Get custom filename from query parameter or use default
@@ -213,6 +260,22 @@ app.get('/token', (req, res) => {
 });
 
 // Token attributes endpoint - proxy to Artifactory tokens API
+/**
+ * Proxies token attributes request to Artifactory
+ * 
+ * This endpoint forwards token validation and attribute requests to Artifactory's
+ * token API, allowing the client to verify token validity and permissions.
+ * 
+ * @param {Object} req - Express request object
+ * @param {Object} req.headers - Request headers
+ * @param {string} req.headers.authorization - Bearer token for authentication
+ * @param {Object} res - Express response object
+ * @returns {Promise<void>} Returns token attributes or error response
+ * 
+ * @example
+ * GET /token-attributes
+ * Authorization: Bearer jwt_token_here
+ */
 app.get('/token-attributes', async (req, res) => {
     try {
         const authHeader = req.headers.authorization;

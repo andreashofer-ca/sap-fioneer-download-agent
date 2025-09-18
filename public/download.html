@@ -308,8 +308,15 @@
 
         /**
          * Download file using File System Access API or fallback method
+         * 
+         * Attempts to use the modern File System Access API for user-selectable
+         * save locations. Falls back to traditional blob download for older browsers.
+         * 
+         * @async
          * @param {Blob} blob - File blob to save
-         * @param {string} filename - Suggested filename
+         * @param {string} filename - Suggested filename for the download
+         * @returns {Promise<boolean>} True if file was saved successfully, false otherwise
+         * @throws {Error} When File System Access API fails and no fallback is available
          */
         async function saveFile(blob, filename) {
             // Try modern File System Access API (Chrome 86+, Edge 86+)
@@ -361,8 +368,22 @@
         }
 
         /**
-         * Main download function using JSFileDownloader
-         * Downloads file with progress tracking and better error handling for large files
+         * Main download function using XMLHttpRequest streaming
+         * 
+         * Downloads file with progress tracking and better error handling for large files.
+         * Uses XMLHttpRequest with responseType 'blob' for efficient streaming and
+         * real-time progress updates.
+         * 
+         * Features:
+         * - Streaming download to handle large files
+         * - Real-time progress tracking with MB display
+         * - 10-minute timeout for large file downloads
+         * - Comprehensive error handling with user-friendly messages
+         * - Automatic file saving using File System Access API or fallback
+         * 
+         * @async
+         * @returns {Promise<void>} Completes when download finishes or fails
+         * @throws {Error} When initialization fails or network errors occur
          */
         async function startDownload() {
             if (!accessToken) {
