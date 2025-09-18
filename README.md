@@ -75,7 +75,7 @@ A secure, modern web application for downloading large files from Artifactory wi
 
 4. **Configure test harness**:
    ```bash
-   cp filelist.html.example test.html
+   cp test.html.example test.html
    # Edit test.html and add your token if needed
    ```
 
@@ -174,7 +174,7 @@ curl -H "Authorization: Bearer your_token" http://localhost:3000/token-attribute
 ### Project Structure
 ```
 ├── server.js              # Express server with API endpoints
-├── filelist.html.example   # Test harness template (copy to test.html)
+├── test.html.example   # Test harness template (copy to test.html)
 ├── public/
 │   └── download.html       # Download manager popup
 ├── package.json           # Node.js dependencies
