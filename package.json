@@ -1,5 +1,5 @@
 {
-  "name": "sap-fioneer-download-agent",
+  "name": "sap-fioneer-download-manager",
   "version": "1.1.0",
   "description": "A secure, modern web application for downloading large files from Artifactory with real-time progress tracking and user-selectable save locations using XMLHttpRequest streaming and the HTML5 File System Access API",
   "main": "server.js",
@@ -10,12 +10,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Fioneer-Corporate/sap-fioneer-download-agent.git"
+    "url": "git+https://github.com/Fioneer-Corporate/sap-fioneer-download-manager.git"
   },
   "bugs": {
-    "url": "https://github.com/Fioneer-Corporate/sap-fioneer-download-agent/issues"
+    "url": "https://github.com/Fioneer-Corporate/sap-fioneer-download-manager/issues"
   },
-  "homepage": "https://github.com/Fioneer-Corporate/sap-fioneer-download-agent#readme",
+  "homepage": "https://github.com/Fioneer-Corporate/sap-fioneer-download-manager#readme",
   "dependencies": {
     "axios": "^1.12.0",
     "dotenv": "^16.3.1",

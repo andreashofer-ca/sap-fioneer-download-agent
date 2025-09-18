@@ -1,4 +1,4 @@
-# SAP Fioneer Download Agent
+# SAP Fioneer Download Manager
 
 A secure, modern web application for downloading large files from Artifactory with real-time progress tracking and user-selectable save locations using XMLHttpRequest streaming and the HTML5 File System Access API.
 
@@ -24,7 +24,7 @@ A secure, modern web application for downloading large files from Artifactory wi
 └─────────────────┘    └──────────────────┘    └─────────────────┘
                               │
                        ┌──────────────────┐
-                       │  Download Agent  │
+                       │  Download Manager  │
                        │ (download.html)  │
                        │  XMLHttpRequest  │
                        │    Streaming     │
@@ -35,7 +35,7 @@ A secure, modern web application for downloading large files from Artifactory wi
 
 1. **Test Harness** (`filelist.html`): Main interface for configuring downloads
 2. **Node.js Server** (`server.js`): Backend API with streaming proxy and token validation
-3. **Download Agent** (`public/download.html`): Popup interface with XMLHttpRequest streaming
+3. **Download Manager** (`public/download.html`): Popup interface with XMLHttpRequest streaming
 4. **Environment Config** (`.env`): Secure configuration for Artifactory credentials
 
 ### Streaming Architecture
@@ -58,8 +58,8 @@ A secure, modern web application for downloading large files from Artifactory wi
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/your-username/sap-fioneer-download-agent.git
-   cd sap-fioneer-download-agent
+   git clone https://github.com/your-username/sap-fioneer-download-manager.git
+   cd sap-fioneer-download-manager
    ```
 
 2. **Install dependencies**:
@@ -120,7 +120,7 @@ PORT=3000
 2. **Configure Download**:
    - Enter the file path (e.g., `download/Fioneer AI Agent/REL/1.0.0/file.sar`)
    - Paste your Artifactory access token
-3. **Launch Download Agent**: Click "Launch Download Agent"
+3. **Launch Download Manager**: Click "Launch Download Manager"
 4. **Download File**: Click "Download File" in the popup
 5. **Choose Location**: Select where to save the file (modern browsers)
 
@@ -152,7 +152,7 @@ Comprehensive error messages for common issues:
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/health` | GET | Server health check |
-| `/download-page` | GET | Serves download agent with injected tokens |
+| `/download-page` | GET | Serves download manager with injected tokens |
 | `/download` | GET | Proxies file downloads from Artifactory |
 | `/token` | GET | Returns environment token (fallback) |
 | `/token-attributes` | GET | Validates token and returns attributes |
@@ -176,7 +176,7 @@ curl -H "Authorization: Bearer your_token" http://localhost:3000/token-attribute
 ├── server.js              # Express server with API endpoints
 ├── filelist.html.example   # Test harness template (copy to filelist.html)
 ├── public/
-│   └── download.html       # Download agent popup
+│   └── download.html       # Download manager popup
 ├── package.json           # Node.js dependencies
 ├── .env.example           # Environment template
 └── README.md              # This file

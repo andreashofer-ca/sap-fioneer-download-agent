@@ -10,7 +10,7 @@ const PORT = process.env.PORT || 3000;
 const ARTIFACTORY_URL = process.env.ARTIFACTORY_URL;
 
 /**
- * SAP Fioneer Download Agent - Backend Server
+ * SAP Fioneer Download Manager - Backend Server
  *
  * A secure Node.js/Express server that provides a REST API for downloading files
  * from Artifactory with JWT authentication and streaming support.

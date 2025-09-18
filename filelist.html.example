@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SAP Fioneer Download Agent Test Harness</title>
+  <title>SAP Fioneer Download Manager Test Harness</title>
   <style>
     /* Reset and base styles */
     * {
@@ -180,8 +180,8 @@
 <body>
   <div class="container">
     <!-- Header -->
-    <h1>SAP Fioneer Download Agent Test Harness</h1>
-    <p class="subtitle">Launch the download agent to securely download files from Artifactory</p>
+    <h1>SAP Fioneer Download Manager Test Harness</h1>
+    <p class="subtitle">Launch the download manager to securely download files from Artifactory</p>
     
     <!-- File information -->
     <div class="file-info">
@@ -194,7 +194,7 @@
 
     <!-- Launch button -->
     <button id="launchBtn" class="btn" onclick="launchDownload()">
-      Launch Download Agent
+      Launch Download Manager
     </button>
 
     <!-- Status display -->
@@ -209,9 +209,9 @@
 
   <script>
     /**
-     * SAP Fioneer Download Agent Test harness
+     * SAP Fioneer Download Manager Test harness
      * 
-     * Static HTML page that launches the download agent in a popup window.
+     * Static HTML page that launches the download manager in a popup window.
      * Checks server status and provides user feedback.
      * 
      * @author SAP Fioneer
@@ -310,7 +310,7 @@
     }
 
     /**
-     * Launch the download agent in a popup window
+     * Launch the download manager in a popup window
      */
     function launchDownload() {
       if (!serverOnline) {
@@ -335,21 +335,21 @@
       checkTokenAttributes();
 
       try {
-        // Open download agent in small popup window with token and filepath parameters
+        // Open download manager in small popup window with token and filepath parameters
         const downloadUrl = `http://localhost:3000/download-page?token=${encodeURIComponent(token)}&filepath=${encodeURIComponent(filePath)}`;
         const windowFeatures = 'width=400,height=500,scrollbars=yes,resizable=yes,menubar=no,toolbar=no,location=no,status=no';
-        const newWindow = window.open(downloadUrl, 'SAPFioneerDownloadAgent', windowFeatures);
+        const newWindow = window.open(downloadUrl, 'SAPFioneerDownloadManager', windowFeatures);
         
         if (!newWindow) {
           // Fallback if popup blocked - open in new tab
           window.open(downloadUrl, '_blank');
-          showStatus('✅ Download agent opened in new tab!', 'success');
+          showStatus('✅ Download manager opened in new tab!', 'success');
         }
         // No status message for successful popup launch
         
       } catch (error) {
         console.error('Launch error:', error);
-        showStatus('❌ Failed to launch download agent.', 'error');
+        showStatus('❌ Failed to launch download manager.', 'error');
       }
     }
 
@@ -363,7 +363,7 @@
       // Check server status every 10 seconds
       setInterval(checkServerStatus, 10000);
       
-      console.log('SAP Fioneer Download Agent Test harness initialized');
+      console.log('SAP Fioneer Download Manager Test harness initialized');
     }
 
     // Initialize when page loads
