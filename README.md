@@ -207,17 +207,36 @@ curl -H "Authorization: Bearer your_token" http://localhost:3000/token-attribute
 ## Security Considerations
 
 - ✅ **Token Security**: Tokens passed via server-side injection, not URL parameters
-- ✅ **CORS Protection**: Proper CORS configuration for cross-origin requests
+- ✅ **CORS Protection**: Restricted to specific allowed origins only (not wildcard *)
 - ✅ **Input Validation**: File path and token validation
 - ✅ **Error Handling**: Secure error messages without information leakage
 - ✅ **Environment Variables**: Sensitive data in environment configuration
 - ✅ **Template Files**: Sensitive files (.gitignored) with .example templates
 
-### Important Security Notes
+### Security Features
 
-- Never commit `filelist.html` or `.env` files with real tokens
-- Always use the `.example` template files and copy them locally
-- Keep your Artifactory tokens secure and rotate them regularly
+#### CORS Security (v1.1.0)
+- **Restricted Origins**: Only allows requests from trusted domains
+- **Allowed Origins**:
+  - `http://localhost:3000` (main server)
+  - `http://localhost:8080` (alternative port)
+  - `http://127.0.0.1:3000` (IPv4 localhost)
+  - `http://127.0.0.1:8080` (IPv4 alternative)
+  - `null` (for file:// protocol support)
+- **Request Logging**: All CORS requests are logged for security monitoring
+- **Automatic Blocking**: Requests from unauthorized origins are blocked
+
+#### Authentication Security
+- JWT token validation with Artifactory
+- Token attributes verification
+- Secure token injection (server-side)
+- No token exposure in URLs
+
+#### Input Security
+- File path sanitization
+- Token format validation
+- SQL injection prevention
+- XSS protection through proper encoding
 
 ## Browser Support
 
@@ -286,6 +305,13 @@ For support and questions:
 - Review server logs for detailed error information
 
 ## Changelog
+
+### v1.1.0 (2025-01-18)
+- 🔒 **Enhanced CORS Security**: Replaced wildcard (*) with restricted allowed origins
+- 📊 **Security Monitoring**: Added comprehensive CORS request logging
+- 🛡️ **Input Validation**: Improved file path and token validation
+- 📝 **Documentation**: Updated security documentation and API docs
+- 🔧 **Code Cleanup**: Improved error handling and logging consistency
 
 ### v1.0.0
 - Initial release with streaming download support

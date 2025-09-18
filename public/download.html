@@ -249,7 +249,7 @@
             progressText: document.getElementById('progressText')
         };
 
-        // Get token from URL parameter
+        // Get token from URL parameter (will be replaced by server injection)
         const urlParams = new URLSearchParams(window.location.search);
         const accessToken = urlParams.get('token');
 
@@ -589,6 +589,31 @@
          */
         function getFileId(filename) {
             return btoa(filename).replace(/[^a-zA-Z0-9]/g, '').substring(0, 10);
+        }
+
+        /**
+         * Initialize the download page
+         * 
+         * Sets up the page with the injected token and filepath,
+         * updates the UI to show the filename and download button.
+         */
+        function init() {
+            try {
+                // Update filename display
+                const displayName = filename.split('/').pop() || filename;
+                elements.filenameDisplay.textContent = displayName;
+                
+                // Show download button and hide loading state
+                elements.downloadForm.style.display = 'block';
+                
+                console.log('Download page initialized successfully');
+                console.log('Token present:', !!accessToken);
+                console.log('Filename:', filename);
+                
+            } catch (error) {
+                console.error('Error initializing download page:', error);
+                showStatus('❌ Failed to initialize download page', 'error');
+            }
         }
 
         // Initialize when page loads

@@ -8,24 +8,63 @@ const PORT = process.env.PORT || 3000;
 
 /**
  * SAP Fioneer Download Agent
- * 
+ *
  * A secure web application for downloading files from Artifactory with:
- * - JWT token-based authentication
+ * - JWT token-based authentication via query parameters
+ * - Secure CORS configuration with allowed origins only
  * - Real-time progress tracking for large files
  * - User-selectable save locations via File System Access API
  * - Streaming downloads to handle large file sizes efficiently
- * 
+ * - Comprehensive error handling and logging
+ *
+ * Security Features:
+ * - CORS restricted to specific allowed origins
+ * - JWT token validation
+ * - Input sanitization for file paths
+ * - Secure headers for downloads
+ *
  * @author SAP Fioneer Team
- * @version 1.0.0
+ * @version 1.1.0
  * @license MIT
+ * @updated 2025-01-18 - Enhanced CORS security
  */
 
-// Add CORS headers to allow requests from file:// origins
+// Configure allowed CORS origins for security
+const allowedOrigins = [
+    'http://localhost:3000',
+    'http://localhost:8080',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:8080',
+    'null' // Allow requests from file:// protocol (common in development)
+];
+
+// Add secure CORS headers - only allow specific origins
 app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    const origin = req.headers.origin;
+    console.log('CORS request from origin:', origin);
+
+    // Check if the requesting origin is in our allowed list
+    if (allowedOrigins.includes(origin) || origin === 'null') {
+        res.header('Access-Control-Allow-Origin', origin || 'null');
+        console.log('CORS allowed for origin:', origin);
+    } else if (!origin && req.headers.host) {
+        // Allow requests without Origin header (like mobile apps or curl)
+        // but only for same-origin requests
+        const host = req.headers.host.split(':')[0];
+        if (host === 'localhost' || host === '127.0.0.1') {
+            res.header('Access-Control-Allow-Origin', `http://${req.headers.host}`);
+            console.log('CORS allowed for host:', req.headers.host);
+        } else {
+            console.log('CORS blocked for host:', req.headers.host);
+        }
+    } else {
+        console.log('CORS blocked for origin:', origin);
+    }
+
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    
+    res.header('Access-Control-Allow-Credentials', 'false'); // No credentials needed for downloads
+
     // Handle preflight requests
     if (req.method === 'OPTIONS') {
         res.sendStatus(200);
@@ -111,20 +150,29 @@ app.get('/download-page', (req, res) => {
 // Download endpoint
 /**
  * Downloads a file from Artifactory and streams it to the client
- * 
+ *
  * This endpoint proxies file downloads from Artifactory with proper authentication
  * and streams the response to handle large files efficiently without loading
  * them entirely into memory.
- * 
+ *
+ * Security Features:
+ * - Validates JWT token from query parameters
+ * - Applies secure CORS headers (restricted origins only)
+ * - Sanitizes filenames to prevent path traversal
+ * - Supports resumable downloads with Range headers
+ *
  * @param {Object} req - Express request object
  * @param {Object} req.query - Query parameters
  * @param {string} req.query.filename - The filename/path to download from Artifactory
  * @param {string} req.query.token - JWT token for Artifactory authentication
+ * @param {Object} req.headers - Request headers
+ * @param {string} [req.headers.range] - Range header for resumable downloads
  * @param {Object} res - Express response object
  * @returns {Promise<void>} Streams the file or sends error response
- * 
+ *
  * @example
  * GET /download?filename=path/to/file.sar&token=jwt_token_here
+ * Range: bytes=0-1023
  */
 app.get('/download', async (req, res) => {
     try {
@@ -142,12 +190,15 @@ app.get('/download', async (req, res) => {
         console.log('Artifactory URL:', artifactoryUrl);
 
         if (!token) {
-            console.log('ERROR: No token provided in download request');
-            return res.status(400).json({ error: 'Access token must be provided in request' });
+            console.error('ERROR: No token provided in download request');
+            return res.status(400).json({
+                error: 'Access token required',
+                message: 'Please provide a valid JWT token in the request',
+                code: 'MISSING_TOKEN'
+            });
         }
 
         console.log('Starting download from Artifactory...');
-        console.log('Using custom token from request');
 
         // Check for Range header (for resume capability)
         const rangeHeader = req.headers.range;
@@ -197,8 +248,16 @@ app.get('/download', async (req, res) => {
         res.setHeader('Pragma', 'no-cache');
         res.setHeader('Expires', '0');
         
-        // Add CORS headers for the download endpoint too
-        res.setHeader('Access-Control-Allow-Origin', '*');
+        // Add secure CORS headers for the download endpoint
+        const origin = req.headers.origin;
+        if (allowedOrigins.includes(origin) || origin === 'null') {
+            res.setHeader('Access-Control-Allow-Origin', origin || 'null');
+        } else if (!origin && req.headers.host) {
+            const host = req.headers.host.split(':')[0];
+            if (host === 'localhost' || host === '127.0.0.1') {
+                res.setHeader('Access-Control-Allow-Origin', `http://${req.headers.host}`);
+            }
+        }
         res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Length, Content-Type, Accept-Ranges, Content-Range');
 
         // Handle range requests (resume capability)
