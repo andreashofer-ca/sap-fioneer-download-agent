@@ -20,7 +20,7 @@ A secure, modern web application for downloading large files from Artifactory wi
 ```
 ┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
 │   Test Harness  │    │   Node.js Server │    │   Artifactory   │
-│  (filelist.html)│────│   (server.js)    │────│     API         │
+│   (test.html)   │────│   (server.js)    │────│     API         │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
                               │
                        ┌──────────────────┐
@@ -33,7 +33,7 @@ A secure, modern web application for downloading large files from Artifactory wi
 
 ### Components
 
-1. **Test Harness** (`filelist.html`): Main interface for configuring downloads
+1. **Test Harness** (`test.html`): Main interface for configuring downloads
 2. **Node.js Server** (`server.js`): Backend API with streaming proxy and token validation
 3. **Download Manager** (`public/download.html`): Popup interface with XMLHttpRequest streaming
 4. **Environment Config** (`.env`): Secure configuration for Artifactory credentials
@@ -75,8 +75,8 @@ A secure, modern web application for downloading large files from Artifactory wi
 
 4. **Configure test harness**:
    ```bash
-   cp filelist.html.example filelist.html
-   # Edit filelist.html and add your token if needed
+   cp filelist.html.example test.html
+   # Edit test.html and add your token if needed
    ```
 
 5. **Start the server**:
@@ -85,7 +85,7 @@ A secure, modern web application for downloading large files from Artifactory wi
    ```
 
 5. **Open the test harness**:
-   Open the `filelist.html` file locally with appropriately configured token.
+   Open the `test.html` file locally with appropriately configured token.
 
 ## Configuration
 
@@ -116,7 +116,7 @@ PORT=3000
 
 ### Basic Download Flow
 
-1. **Launch Test Harness**: Open `http://localhost:3000/filelist.html`
+1. **Launch Test Harness**: Open `http://localhost:3000/test.html`
 2. **Configure Download**:
    - Enter the file path (e.g., `download/Fioneer AI Agent/REL/1.0.0/file.sar`)
    - Paste your Artifactory access token
@@ -174,7 +174,7 @@ curl -H "Authorization: Bearer your_token" http://localhost:3000/token-attribute
 ### Project Structure
 ```
 ├── server.js              # Express server with API endpoints
-├── filelist.html.example   # Test harness template (copy to filelist.html)
+├── filelist.html.example   # Test harness template (copy to test.html)
 ├── public/
 │   └── download.html       # Download manager popup
 ├── package.json           # Node.js dependencies
