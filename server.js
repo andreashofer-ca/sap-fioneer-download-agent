@@ -149,8 +149,24 @@ app.get('/download', async (req, res) => {
         console.log('Starting download from Artifactory...');
         console.log('Using custom token from request');
 
-        // Make request to Artifactory with authentication
-        const response = await axios({
+        // Check for Range header (for resume capability)
+        const rangeHeader = req.headers.range;
+        let startByte = 0;
+        let endByte = undefined;
+
+        if (rangeHeader) {
+            const rangeMatch = rangeHeader.match(/bytes=(\d+)-(\d*)/);
+            if (rangeMatch) {
+                startByte = parseInt(rangeMatch[1], 10);
+                if (rangeMatch[2]) {
+                    endByte = parseInt(rangeMatch[2], 10);
+                }
+                console.log(`Range request: bytes ${startByte}-${endByte || 'end'}`);
+            }
+        }
+
+        // Make request to Artifactory with authentication and range support
+        const axiosConfig = {
             method: 'GET',
             url: artifactoryUrl,
             headers: {
@@ -158,7 +174,14 @@ app.get('/download', async (req, res) => {
                 'Accept': '*/*'
             },
             responseType: 'stream'
-        });
+        };
+
+        // Add Range header if specified
+        if (rangeHeader) {
+            axiosConfig.headers['Range'] = rangeHeader;
+        }
+
+        const response = await axios(axiosConfig);
 
         // Extract just the filename from the path for download headers
         const pathParts = customFilename.split('/');
@@ -176,11 +199,23 @@ app.get('/download', async (req, res) => {
         
         // Add CORS headers for the download endpoint too
         res.setHeader('Access-Control-Allow-Origin', '*');
-        res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Length, Content-Type');
+        res.setHeader('Access-Control-Expose-Headers', 'Content-Disposition, Content-Length, Content-Type, Accept-Ranges, Content-Range');
 
-        // If Artifactory provides content-length, forward it
-        if (response.headers['content-length']) {
+        // Handle range requests (resume capability)
+        if (rangeHeader && response.status === 206) {
+            // Partial content response
+            res.setHeader('Accept-Ranges', 'bytes');
+            if (response.headers['content-range']) {
+                res.setHeader('Content-Range', response.headers['content-range']);
+            }
+            if (response.headers['content-length']) {
+                res.setHeader('Content-Length', response.headers['content-length']);
+            }
+            console.log('Serving partial content for resume');
+        } else if (response.headers['content-length']) {
+            // Regular response with content length
             res.setHeader('Content-Length', response.headers['content-length']);
+            res.setHeader('Accept-Ranges', 'bytes');
         }
 
         console.log('Streaming file to client...');
