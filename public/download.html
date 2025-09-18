@@ -153,6 +153,35 @@
             100% { transform: rotate(360deg); }
         }
 
+        /* Progress bar styles */
+        .progress-container {
+            margin: 15px 0;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(45deg, #007bff, #0056b3);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        .progress-text {
+            font-size: 0.85rem;
+            color: #666;
+            text-align: center;
+        }
+
         /* Info text */
         .info {
             font-size: 0.85rem;
@@ -183,6 +212,14 @@
         <!-- Status display -->
         <div id="status" class="status hidden"></div>
         
+        <!-- Progress bar -->
+        <div id="progressContainer" class="progress-container">
+            <div class="progress-bar">
+                <div id="progressFill" class="progress-fill"></div>
+            </div>
+            <div id="progressText" class="progress-text">0%</div>
+        </div>
+        
         <!-- Close button -->
         <button id="closeBtn" class="btn btn-secondary hidden" onclick="window.close()">
             Close Window
@@ -206,7 +243,10 @@
             downloadBtn: document.getElementById('downloadBtn'),
             status: document.getElementById('status'),
             closeBtn: document.getElementById('closeBtn'),
-            filenameDisplay: document.getElementById('filenameDisplay')
+            filenameDisplay: document.getElementById('filenameDisplay'),
+            progressContainer: document.getElementById('progressContainer'),
+            progressFill: document.getElementById('progressFill'),
+            progressText: document.getElementById('progressText')
         };
 
         // Get token from URL parameter
@@ -235,6 +275,26 @@
          */
         function hideStatus() {
             elements.status.classList.add('hidden');
+        }
+
+        /**
+         * Update download progress
+         * @param {number} percentage - Progress percentage (0-100)
+         * @param {string} text - Progress text
+         */
+        function updateProgress(percentage, text) {
+            elements.progressFill.style.width = `${percentage}%`;
+            elements.progressText.textContent = text || `${Math.round(percentage)}%`;
+            elements.progressContainer.style.display = 'block';
+        }
+
+        /**
+         * Hide progress bar
+         */
+        function hideProgress() {
+            elements.progressContainer.style.display = 'none';
+            elements.progressFill.style.width = '0%';
+            elements.progressText.textContent = '0%';
         }
 
         /**
@@ -301,68 +361,102 @@
         }
 
         /**
-         * Main download function
-         * Fetches file from server and saves it using appropriate method
+         * Main download function using JSFileDownloader
+         * Downloads file with progress tracking and better error handling for large files
          */
         async function startDownload() {
             if (!accessToken) {
                 showStatus('❌ No access token provided. Please launch from the test harness.', 'error');
                 return;
             }
-            
+
+            const downloadFilename = filename.split('/').pop() || 'download';
+            const downloadUrl = `/download?filename=${encodeURIComponent(filename)}&token=${encodeURIComponent(accessToken)}`;
+
             try {
                 setDownloadingState(true);
-                showStatus('Downloading from Artifactory...', 'loading', true);
-                
-                // Fetch file from server with custom token and filename
-                const response = await fetch(`/download?filename=${encodeURIComponent(filename)}&token=${encodeURIComponent(accessToken)}`);
-                
-                if (!response.ok) {
-                    // Try to get detailed error message from server
-                    let errorMessage = 'Download failed';
-                    try {
-                        const errorData = await response.json();
-                        if (errorData.message) {
-                            errorMessage = `${errorData.error || 'Error'}: ${errorData.message}`;
-                        } else {
-                            // Fallback messages based on status
-                            switch (response.status) {
-                                case 401:
-                                    errorMessage = 'Authentication Failed: Your access token is invalid or expired. Please check your token and try again.';
-                                    break;
-                                case 403:
-                                    errorMessage = 'Access Denied: Your token does not have permission to access this file.';
-                                    break;
-                                case 404:
-                                    errorMessage = 'File Not Found: The requested file was not found in Artifactory.';
-                                    break;
-                                case 503:
-                                    errorMessage = 'Service Unavailable: Unable to connect to Artifactory. Please check your network connection.';
-                                    break;
-                                default:
-                                    errorMessage = `Server Error (${response.status}): Please try again later.`;
-                            }
-                        }
-                    } catch (parseError) {
-                        // If JSON parsing fails, use status-based message
-                        errorMessage = `Server Error (${response.status}): Please try again later.`;
+                hideStatus();
+                updateProgress(0, 'Initializing download...');
+
+                // Create XHR to stream the file and receive progress events
+                const xhr = new XMLHttpRequest();
+                xhr.open('GET', downloadUrl, true);
+                xhr.responseType = 'blob';
+                xhr.timeout = 600000; // 10 minutes
+
+                xhr.setRequestHeader('Accept', 'application/octet-stream');
+
+                xhr.addEventListener('progress', (event) => {
+                    if (event.lengthComputable) {
+                        const percent = (event.loaded / event.total) * 100;
+                        const loadedMB = (event.loaded / 1024 / 1024).toFixed(1);
+                        const totalMB = (event.total / 1024 / 1024).toFixed(1);
+                        updateProgress(percent, `${Math.round(percent)}% (${loadedMB}MB / ${totalMB}MB)`);
+                    } else {
+                        const loadedMB = (event.loaded / 1024 / 1024).toFixed(1);
+                        updateProgress(50, `Downloading... ${loadedMB}MB`);
                     }
-                    throw new Error(errorMessage);
-                }
-                
-                const blob = await response.blob();
-                
-                // Save file using appropriate method
-                const saved = await saveFile(blob, filename);
-                
-                if (saved) {
-                    // Auto-close window after 3 seconds
-                    setTimeout(() => window.close(), 3000);
-                }
-                
+                });
+
+                xhr.addEventListener('load', async () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        updateProgress(100, 'Download completed');
+                        try {
+                            const saved = await saveFile(xhr.response, downloadFilename);
+                            if (saved) {
+                                showStatus('✅ File downloaded successfully!', 'success');
+                                setTimeout(() => { hideProgress(); window.close(); }, 3000);
+                            } else {
+                                showStatus('❌ File not saved.', 'error');
+                                setDownloadingState(false);
+                            }
+                        } catch (err) {
+                            console.error('Save failed:', err);
+                            showStatus(`❌ Save failed: ${err.message}`, 'error');
+                            setDownloadingState(false);
+                        }
+                    } else {
+                        // Try to parse server JSON error
+                        let msg = `Server Error (${xhr.status})`;
+                        try {
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                                try {
+                                    const json = JSON.parse(reader.result);
+                                    if (json.message) msg = json.message;
+                                } catch (e) {
+                                    /* ignore JSON parse errors */
+                                }
+                                showStatus(`❌ ${msg}`, 'error');
+                                setDownloadingState(false);
+                            };
+                            reader.readAsText(xhr.response || new Blob());
+                        } catch (e) {
+                            showStatus(`❌ ${msg}`, 'error');
+                            setDownloadingState(false);
+                        }
+                    }
+                });
+
+                xhr.addEventListener('error', () => {
+                    hideProgress();
+                    showStatus('❌ Network error during download. Please check your connection.', 'error');
+                    setDownloadingState(false);
+                });
+
+                xhr.addEventListener('timeout', () => {
+                    hideProgress();
+                    showStatus('❌ Download timed out. Try again later or increase timeout.', 'error');
+                    setDownloadingState(false);
+                });
+
+                updateProgress(5, 'Connecting to server...');
+                xhr.send();
+
             } catch (error) {
-                console.error('Download failed:', error);
-                showStatus(`❌ ${error.message}`, 'error');
+                hideProgress();
+                console.error('Download initialization failed:', error);
+                showStatus(`❌ ${error.message || 'Failed to start download'}`, 'error');
                 setDownloadingState(false);
             }
         }

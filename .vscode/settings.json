@@ -1,0 +1,5 @@
+{
+  "extensions.ignoreRecommendations": true,
+  "cds.contributions.disableJsonSchemaContributions": true,
+  "json.schemas": []
+}

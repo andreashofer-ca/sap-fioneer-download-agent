@@ -23,6 +23,9 @@ app.use((req, res, next) => {
 // Serve static files from public directory
 app.use(express.static('public'));
 
+// Serve node_modules for frontend libraries
+app.use('/node_modules', express.static('node_modules'));
+
 // Route to serve the main page
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
