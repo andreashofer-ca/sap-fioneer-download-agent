@@ -169,12 +169,69 @@ curl "http://localhost:3000/download?filename=path/to/file.ext&token=your_token"
 curl -H "Authorization: Bearer your_token" http://localhost:3000/token-attributes
 ```
 
-## Development
+## Deployment
+
+### Cloud Foundry Deployment
+
+The application can be deployed to Cloud Foundry using the provided `manifest.yml` file.
+
+#### Prerequisites
+- Cloud Foundry CLI installed
+- Access to a Cloud Foundry environment
+- Artifactory access token configured as environment variable
+
+#### Deployment Steps
+
+1. **Login to Cloud Foundry**:
+   ```bash
+   cf login -a <api-endpoint> -u <username> -p <password> -o <org> -s <space>
+   ```
+
+2. **Set Environment Variables** (if not using services):
+   ```bash
+   cf set-env sap-fioneer-download-manager ARTIFACTORY_TOKEN "your_token_here"
+   cf set-env sap-fioneer-download-manager ARTIFACTORY_URL "https://your-instance.jfrog.io/artifactory/"
+   ```
+
+3. **Deploy the Application**:
+   ```bash
+   cf push
+   ```
+
+4. **Check Application Status**:
+   ```bash
+   cf apps
+   cf logs sap-fioneer-download-manager --recent
+   ```
+
+#### Manifest Configuration
+
+The `manifest.yml` file includes:
+- **Memory**: 512MB allocation
+- **Disk**: 1GB quota
+- **Buildpack**: Node.js buildpack
+- **Health Check**: HTTP endpoint at `/health`
+- **Environment**: Production mode
+
+#### Customizing Deployment
+
+Edit `manifest.yml` to customize:
+- Application name
+- Memory/disk allocation
+- Number of instances
+- Environment variables
+- Service bindings
+- Custom routes
+
+### Local Development
+
+For local development, follow the Quick Start section above.
 
 ### Project Structure
 ```
 ├── server.js              # Express server with API endpoints
-├── test.html.example   # Test harness template (copy to test.html)
+├── test.html.example       # Test harness template (copy to test.html)
+├── manifest.yml            # Cloud Foundry deployment configuration
 ├── public/
 │   └── download.html       # Download manager popup
 ├── package.json           # Node.js dependencies

@@ -1,0 +1,24 @@
+---
+applications:
+  - name: sap-fioneer-download-manager
+    memory: 512M
+    disk_quota: 1G
+    instances: 1
+    buildpack: nodejs_buildpack
+    command: npm start
+    timeout: 180
+    env:
+      NODE_ENV: production
+      # Cloud Foundry automatically sets PORT environment variable
+      # ARTIFACTORY_TOKEN should be set via CF environment variables or services
+    services:
+      # Add your Artifactory or other service bindings here
+      # - artifactory-service
+      # - database-service (if needed)
+    routes:
+      # Optional: specify custom routes
+      # - route: sap-fioneer-download-manager.your-org.cloudfoundry.com
+    health-check-type: http
+    health-check-http-endpoint: /health
+    # Optional: specify stack if needed
+    # stack: cflinuxfs4
