@@ -397,7 +397,7 @@
             }
 
             const downloadFilename = filename.split('/').pop() || 'download';
-            const downloadUrl = `http://localhost:3000/download?filename=${encodeURIComponent(filename)}`;
+            const downloadUrl = `https://sap-fioneer-download-manager.cfapps.eu10-005.hana.ondemand.com/download?filename=${encodeURIComponent(filename)}`;
             const fileId = getFileId(filename);
             
             let startByte = 0;
@@ -551,7 +551,7 @@
                 total,
                 filename,
                 timestamp: Date.now(),
-                url: `http://localhost:3000/download?filename=${encodeURIComponent(filename)}`
+                url: `https://sap-fioneer-download-manager.cfapps.eu10-005.hana.ondemand.com/download?filename=${encodeURIComponent(filename)}`
             };
             localStorage.setItem(`download_${fileId}`, JSON.stringify(progress));
         }

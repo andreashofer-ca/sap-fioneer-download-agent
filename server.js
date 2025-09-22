@@ -39,6 +39,7 @@ const ARTIFACTORY_URL = process.env.ARTIFACTORY_URL;
 const allowedOrigins = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
+    'https://sap-fioneer-download-manager.cfapps.eu10-005.hana.ondemand.com', // Deployed CF app domain
     'null' // Allow requests from file:// protocol (common in development)
 ];
 
@@ -108,14 +109,21 @@ app.get('/', (req, res) => {
  * Authorization: Bearer jwt_token_here
  */
 app.get('/download-page', (req, res) => {
-    // Get token from Authorization header (secure approach)
+    // Get token from Authorization header OR query parameter (for popup compatibility)
     const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-        console.log('ERROR: No valid Authorization header provided');
-        return res.status(401).send('<h1>Error: Authorization Required</h1><p>Please provide a valid Bearer token in the Authorization header.</p><p>Example:<br><code>Authorization: Bearer your_jwt_token_here</code></p>');
+    let token = null;
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    } else if (req.query.token) {
+        token = req.query.token; // Fallback to query parameter for popup windows
+    }
+    
+    if (!token) {
+        console.log('ERROR: No valid Authorization header or token query parameter provided');
+        return res.status(401).send('<h1>Error: Authorization Required</h1><p>Please provide a valid Bearer token in the Authorization header or as a query parameter.</p><p>Example:<br><code>Authorization: Bearer your_jwt_token_here</code><br>OR<br><code>?token=your_jwt_token_here</code></p>');
     }
 
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
     const filePath = req.query.filepath;
 
     console.log('Download page requested with token:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');

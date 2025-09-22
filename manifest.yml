@@ -11,13 +11,18 @@ applications:
       NODE_ENV: production
       # Cloud Foundry automatically sets PORT environment variable
       # ARTIFACTORY_TOKEN should be set via CF environment variables or services
-    services:
-      # Add your Artifactory or other service bindings here
-      # - artifactory-service
-      # - database-service (if needed)
-    routes:
-      # Optional: specify custom routes
-      # - route: sap-fioneer-download-manager.your-org.cloudfoundry.com
+    # If you need to bind services, list their instance names here, e.g.:
+    # services:
+    #   - artifactory-creds
+    #   - some-database
+    # For now provide an empty list so the manifest is valid for `cf push`.
+    services: []
+
+    # If you want to predeclare custom routes, provide a list of route objects:
+    # routes:
+    #   - route: sap-fioneer-download-manager.your-org.cloudfoundry.com
+    # Use an empty list if you don't declare any routes here (CF will assign one).
+    routes: []
     health-check-type: http
     health-check-http-endpoint: /health
     # Optional: specify stack if needed
