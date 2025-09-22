@@ -73,10 +73,11 @@ A secure, modern web application for downloading large files from Artifactory wi
    # Edit .env with your Artifactory details
    ```
 
-4. **Configure test harness**:
+4. **Configure test harness** (optional for development):
    ```bash
    cp test.html.example test.html
    # Edit test.html and add your token if needed
+   # Note: test.html is gitignored to prevent token exposure
    ```
 
 5. **Start the server**:
@@ -84,8 +85,9 @@ A secure, modern web application for downloading large files from Artifactory wi
    npm start
    ```
 
-5. **Open the test harness**:
-   Open the `test.html` file locally with appropriately configured token.
+6. **Access the application**:
+   - **Production**: https://sap-fioneer-download-manager.cfapps.eu10-005.hana.ondemand.com
+   - **Local development**: http://localhost:3000
 
 ## Configuration
 
@@ -116,7 +118,9 @@ PORT=3000
 
 ### Basic Download Flow
 
-1. **Launch Test Harness**: Open `http://localhost:3000/test.html`
+1. **Access the Application**: 
+   - **Production**: Visit https://sap-fioneer-download-manager.cfapps.eu10-005.hana.ondemand.com
+   - **Development**: Open `http://localhost:3000` or use the test harness at `test.html`
 2. **Configure Download**:
    - Enter the file path (e.g., `download/Fioneer AI Agent/REL/1.0.0/file.sar`)
    - Paste your Artifactory access token
@@ -173,7 +177,8 @@ curl -H "Authorization: Bearer your_token" http://localhost:3000/token-attribute
 
 ### Cloud Foundry Deployment
 
-The application can be deployed to Cloud Foundry using the provided `manifest.yml` file.
+The application is deployed to SAP BTP Cloud Foundry and can be accessed at:
+**https://sap-fioneer-download-manager.cfapps.eu10-005.hana.ondemand.com**
 
 #### Prerequisites
 - Cloud Foundry CLI installed
@@ -184,7 +189,8 @@ The application can be deployed to Cloud Foundry using the provided `manifest.ym
 
 1. **Login to Cloud Foundry**:
    ```bash
-   cf login -a <api-endpoint> -u <username> -p <password> -o <org> -s <space>
+   cf login --sso
+   # Follow the browser authentication flow for SAP BTP
    ```
 
 2. **Set Environment Variables** (if not using services):
@@ -195,7 +201,7 @@ The application can be deployed to Cloud Foundry using the provided `manifest.ym
 
 3. **Deploy the Application**:
    ```bash
-   cf push
+   cf push -f manifest.yml
    ```
 
 4. **Check Application Status**:
@@ -203,6 +209,12 @@ The application can be deployed to Cloud Foundry using the provided `manifest.ym
    cf apps
    cf logs sap-fioneer-download-manager --recent
    ```
+
+#### Current Deployment
+- **URL**: https://sap-fioneer-download-manager.cfapps.eu10-005.hana.ondemand.com
+- **Status**: ✅ Running (last deployed: September 22, 2025)
+- **Health Check**: https://sap-fioneer-download-manager.cfapps.eu10-005.hana.ondemand.com/health
+- **Platform**: SAP BTP Cloud Foundry (eu10-005 region)
 
 #### Manifest Configuration
 
@@ -231,11 +243,14 @@ For local development, follow the Quick Start section above.
 ```
 ├── server.js              # Express server with API endpoints
 ├── test.html.example       # Test harness template (copy to test.html)
+├── test.html              # Test harness (gitignored - contains tokens)
 ├── manifest.yml            # Cloud Foundry deployment configuration
 ├── public/
+│   ├── index.html          # Landing page (deployed)
 │   └── download.html       # Download manager popup
 ├── package.json           # Node.js dependencies
 ├── .env.example           # Environment template
+├── .env                   # Environment variables (gitignored)
 └── README.md              # This file
 ```
 
@@ -263,21 +278,45 @@ For local development, follow the Quick Start section above.
 
 ## Security Considerations
 
-- ✅ **Token Security**: Tokens passed via server-side injection, not URL parameters
-- ✅ **CORS Protection**: Restricted to specific allowed origins only (not wildcard *)
+- ✅ **Token Security**: Multiple authentication methods supported (Authorization headers, query parameters)
+- ✅ **CORS Protection**: Restricted to specific allowed origins including production deployment
 - ✅ **Input Validation**: File path and token validation
 - ✅ **Error Handling**: Secure error messages without information leakage
 - ✅ **Environment Variables**: Sensitive data in environment configuration
 - ✅ **Template Files**: Sensitive files (.gitignored) with .example templates
+- ✅ **Production Deployment**: Sanitized public pages without internal server details
+
+### Security Notes for Customer-Facing Applications
+
+**Current Implementation**: The application currently passes tokens via query parameters for popup window compatibility. While this works well for internal use, consider these factors for customer-facing deployments:
+
+**Query Parameter Risks**:
+- Tokens appear in server access logs
+- Browser history may contain tokens
+- Referrer headers could leak tokens
+- URLs with tokens might be inadvertently shared
+
+**Alternative Approaches for Enhanced Security**:
+- Session-based authentication with HTTP-only cookies
+- JWT tokens with shorter expiration times
+- Signed URLs with time-limited access
+- OAuth 2.0 flow integration
+
+**Current Mitigations**:
+- HTTPS-only transmission
+- Restricted CORS origins
+- No token logging in application code
+- gitignored test files to prevent token exposure
 
 ### Security Features
 
-#### CORS Security (v1.1.0)
+#### CORS Security (v1.2.0)
 - **Restricted Origins**: Only allows requests from trusted domains
 - **Allowed Origins**:
-  - `http://localhost:3000` (main server)
+  - `http://localhost:3000` (development server)
   - `http://127.0.0.1:3000` (IPv4 localhost)
-  - `null` (for file:// protocol support)
+  - `https://sap-fioneer-download-manager.cfapps.eu10-005.hana.ondemand.com` (production deployment)
+  - `null` (for file:// protocol support in development)
 - **Request Logging**: All CORS requests are logged for security monitoring
 - **Automatic Blocking**: Requests from unauthorized origins are blocked
 
@@ -361,12 +400,22 @@ For support and questions:
 
 ## Changelog
 
+### v1.2.0 (2025-09-22) - Production Deployment
+- 🚀 **Cloud Foundry Deployment**: Successfully deployed to SAP BTP Cloud Foundry
+- 🌐 **Production URLs**: Updated all hardcoded localhost URLs to production domain
+- 🔒 **Enhanced CORS**: Added production domain to allowed origins
+- 🧹 **Code Cleanup**: Removed test.html from git tracking to prevent token exposure
+- 📄 **Public Pages**: Sanitized landing page to remove internal server details
+- 🔐 **Security Documentation**: Added comprehensive security considerations for customer-facing use
+- 📝 **Documentation**: Updated README with deployment information and current URLs
+- ✅ **End-to-End Verification**: Confirmed full download flow functionality in production
+
 ### v1.1.0 (2025-01-18)
 - 🧹 **Code Cleanup**: Removed unused dependencies and cleaned up redundant code
-- � **Documentation**: Enhanced inline comments and API documentation
-- � **Security**: Improved token handling and removed hardcoded credentials
+- 📚 **Documentation**: Enhanced inline comments and API documentation
+- 🔐 **Security**: Improved token handling and removed hardcoded credentials
 - 🏗️ **Architecture**: Simplified URL construction and configuration
-- � **Dependencies**: Updated package.json and removed unused packages
+- 📦 **Dependencies**: Updated package.json and removed unused packages
 
 ### v1.0.0
 - Initial release with streaming download support
