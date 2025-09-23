@@ -280,7 +280,7 @@
             
             <div class="auto-download-info">
                 <i class="icon icon-download"></i>
-                <span>Download will start automatically</span>
+                <span>Download starting shortly - confirmation required</span>
             </div>
         </div>        <!-- Status display -->
         <div id="status" class="status hidden"></div>
@@ -405,12 +405,13 @@
          * @async
          * @param {Blob} blob - File blob to save
          * @param {string} filename - Suggested filename for the download
+         * @param {boolean} useFileSystemAPI - Whether to try File System Access API
          * @returns {Promise<boolean>} True if file was saved successfully, false otherwise
          * @throws {Error} When File System Access API fails and no fallback is available
          */
-        async function saveFile(blob, filename) {
-            // Try modern File System Access API (Chrome 86+, Edge 86+)
-            if ('showSaveFilePicker' in window) {
+        async function saveFile(blob, filename, useFileSystemAPI = true) {
+            // Try modern File System Access API (Chrome 86+, Edge 86+) only if requested and available
+            if (useFileSystemAPI && 'showSaveFilePicker' in window) {
                 try {
                     showStatus('Choose save location...', 'loading');
                     
@@ -473,10 +474,11 @@
          * - Automatic file saving using File System Access API or fallback
          * 
          * @async
+         * @param {boolean} useFileSystemAPI - Whether to use File System Access API for save location
          * @returns {Promise<void>} Completes when download finishes or fails
          * @throws {Error} When initialization fails or network errors occur
          */
-        async function startDownload() {
+        async function startDownload(useFileSystemAPI = false) {
             if (!accessToken) {
                 showStatus('❌ No access token provided. Please launch from the test harness.', 'error');
                 return;
@@ -564,7 +566,7 @@
                                 console.log('Resume download completed - combining data would be needed for production');
                             }
                             
-                            const saved = await saveFile(finalBlob, downloadFilename);
+                            const saved = await saveFile(finalBlob, downloadFilename, useFileSystemAPI);
                             if (saved) {
                                 showStatus('✅ File downloaded successfully!', 'success');
                                 clearDownloadProgress(fileId); // Clear progress on successful completion
@@ -686,7 +688,7 @@
          * Initialize the download page
          * 
          * Sets up the page with the injected token and filepath,
-         * updates the UI to show the filename and automatically starts the download.
+         * updates the UI to show the filename and prompts for download confirmation.
          */
         async function init() {
             try {
@@ -697,7 +699,7 @@
                 // Update file status
                 const fileStatusElement = document.getElementById('fileStatus');
                 if (fileStatusElement) {
-                    fileStatusElement.textContent = 'Preparing download...';
+                    fileStatusElement.textContent = 'Ready to download';
                 }
                 
                 // Show download form
@@ -707,18 +709,42 @@
                 console.log('Token present:', !!accessToken);
                 console.log('Filename:', filename);
                 
-                // Add a small delay for better UX, then start download automatically
+                // Add a small delay for better UX, then prompt for download
                 setTimeout(async () => {
-                    if (fileStatusElement) {
-                        fileStatusElement.textContent = 'Starting download...';
-                    }
-                    await startDownload();
+                    await promptForDownload();
                 }, 1000); // 1 second delay to let user see the file info
                 
             } catch (error) {
                 console.error('Error initializing download page:', error);
                 showStatus('❌ Failed to initialize download page', 'error');
             }
+        }
+
+        /**
+         * Prompt user for download confirmation and method
+         */
+        async function promptForDownload() {
+            const fileStatusElement = document.getElementById('fileStatus');
+            
+            // Check if File System Access API is available
+            const hasFileSystemAPI = 'showSaveFilePicker' in window;
+            
+            let message = `Ready to download: ${filename.split('/').pop()}\n\n`;
+            
+            if (hasFileSystemAPI) {
+                message += "Click OK to choose where to save the file, or Cancel to download to your default Downloads folder.";
+            } else {
+                message += "Click OK to download the file to your default Downloads folder.";
+            }
+            
+            const useFileSystemAPI = hasFileSystemAPI && confirm(message);
+            
+            if (fileStatusElement) {
+                fileStatusElement.textContent = 'Starting download...';
+            }
+            
+            // Start the download with the chosen method
+            await startDownload(useFileSystemAPI);
         }
 
         // Initialize when page loads
