@@ -110,115 +110,6 @@
             background: #545b62;
         }
 
-        /* File info and auto-download styles */
-        .file-info {
-            display: flex;
-            align-items: center;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 4px;
-            margin-bottom: 15px;
-            border-left: 4px solid #007bff;
-        }
-
-        .file-details {
-            margin-left: 10px;
-            flex-grow: 1;
-        }
-
-        .file-name {
-            font-weight: 600;
-            color: #333;
-            font-size: 0.95rem;
-            word-break: break-all;
-        }
-
-        .file-status {
-            color: #666;
-            font-size: 0.85rem;
-            margin-top: 3px;
-        }
-
-        .auto-download-info {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 12px;
-            background: #e3f2fd;
-            border: 1px solid #bbdefb;
-            border-radius: 4px;
-            color: #1976d2;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .auto-download-info .icon {
-            margin-right: 8px;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.6; }
-        }
-
-        .icon {
-            width: 16px;
-            height: 16px;
-            display: inline-block;
-        }
-
-        .icon-file:before {
-            content: "📄";
-        }
-
-        .icon-download:before {
-            content: "⬇️";
-        }
-
-        /* Download choice dialog */
-        .download-choice {
-            display: none;
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 4px;
-            padding: 20px;
-            margin: 15px 0;
-        }
-
-        .download-choice.show {
-            display: block;
-        }
-
-        .choice-title {
-            font-weight: 600;
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 0.95rem;
-        }
-
-        .choice-description {
-            color: #666;
-            margin-bottom: 15px;
-            font-size: 0.85rem;
-            line-height: 1.4;
-        }
-
-        .choice-buttons {
-            display: flex;
-            gap: 10px;
-        }
-
-        .choice-buttons .btn {
-            flex: 1;
-            margin: 0;
-        }
-
-        .btn-choice {
-            padding: 10px;
-            font-size: 0.85rem;
-        }
-
         /* Status messages */
         .status {
             margin: 20px 0;
@@ -312,36 +203,13 @@
         <div class="filename" id="filenameDisplay">Loading...</div>
         
         <!-- Download form -->
-        <div id="downloadForm" class="download-form" style="display: none;">
-            <div class="file-info">
-                <i class="icon icon-file"></i>
-                <div class="file-details">
-                    <div class="file-name" id="filenameDisplay">Loading...</div>
-                    <div class="file-status" id="fileStatus">Preparing download...</div>
-                </div>
-            </div>
-            
-            <div class="auto-download-info">
-                <i class="icon icon-download"></i>
-                <span>Download starting shortly - confirmation required</span>
-            </div>
-
-            <!-- Download choice dialog -->
-            <div id="downloadChoice" class="download-choice">
-                <div class="choice-title">Choose Download Method</div>
-                <div class="choice-description">
-                    How would you like to save this file?
-                </div>
-                <div class="choice-buttons">
-                    <button class="btn btn-primary btn-choice" onclick="startDownloadWithChoice(true)">
-                        📁 Choose Location
-                    </button>
-                    <button class="btn btn-secondary btn-choice" onclick="startDownloadWithChoice(false)">
-                        💾 Downloads Folder
-                    </button>
-                </div>
-            </div>
-        </div>        <!-- Status display -->
+        <div id="downloadForm">
+            <button id="downloadBtn" class="btn btn-primary" onclick="startDownload()">
+                Download File
+            </button>
+        </div>
+        
+        <!-- Status display -->
         <div id="status" class="status hidden"></div>
         
         <!-- Progress bar -->
@@ -372,7 +240,7 @@
         // DOM element references
         const elements = {
             downloadForm: document.getElementById('downloadForm'),
-            downloadChoice: document.getElementById('downloadChoice'),
+            downloadBtn: document.getElementById('downloadBtn'),
             status: document.getElementById('status'),
             closeBtn: document.getElementById('closeBtn'),
             filenameDisplay: document.getElementById('filenameDisplay'),
@@ -438,21 +306,7 @@
          * @param {boolean} downloading - Whether download is in progress
          */
         function setDownloadingState(downloading) {
-            // Update the auto-download info to show current state
-            const autoDownloadInfo = document.querySelector('.auto-download-info');
-            if (autoDownloadInfo) {
-                if (downloading) {
-                    autoDownloadInfo.innerHTML = '<i class="icon icon-download"></i><span>Download in progress...</span>';
-                    autoDownloadInfo.style.background = '#e8f5e8';
-                    autoDownloadInfo.style.borderColor = '#a5d6a7';
-                    autoDownloadInfo.style.color = '#2e7d32';
-                } else {
-                    autoDownloadInfo.innerHTML = '<i class="icon icon-download"></i><span>Download completed</span>';
-                    autoDownloadInfo.style.background = '#e3f2fd';
-                    autoDownloadInfo.style.borderColor = '#bbdefb';
-                    autoDownloadInfo.style.color = '#1976d2';
-                }
-            }
+            elements.downloadForm.style.display = downloading ? 'none' : 'block';
             elements.closeBtn.classList.toggle('hidden', !downloading);
         }
 
@@ -465,13 +319,12 @@
          * @async
          * @param {Blob} blob - File blob to save
          * @param {string} filename - Suggested filename for the download
-         * @param {boolean} useFileSystemAPI - Whether to try File System Access API
          * @returns {Promise<boolean>} True if file was saved successfully, false otherwise
          * @throws {Error} When File System Access API fails and no fallback is available
          */
-        async function saveFile(blob, filename, useFileSystemAPI = true) {
-            // Try modern File System Access API (Chrome 86+, Edge 86+) only if requested and available
-            if (useFileSystemAPI && 'showSaveFilePicker' in window) {
+        async function saveFile(blob, filename) {
+            // Try modern File System Access API (Chrome 86+, Edge 86+)
+            if ('showSaveFilePicker' in window) {
                 try {
                     showStatus('Choose save location...', 'loading');
                     
@@ -534,11 +387,10 @@
          * - Automatic file saving using File System Access API or fallback
          * 
          * @async
-         * @param {boolean} useFileSystemAPI - Whether to use File System Access API for save location
          * @returns {Promise<void>} Completes when download finishes or fails
          * @throws {Error} When initialization fails or network errors occur
          */
-        async function startDownload(useFileSystemAPI = false) {
+        async function startDownload() {
             if (!accessToken) {
                 showStatus('❌ No access token provided. Please launch from the test harness.', 'error');
                 return;
@@ -626,7 +478,7 @@
                                 console.log('Resume download completed - combining data would be needed for production');
                             }
                             
-                            const saved = await saveFile(finalBlob, downloadFilename, useFileSystemAPI);
+                            const saved = await saveFile(finalBlob, downloadFilename);
                             if (saved) {
                                 showStatus('✅ File downloaded successfully!', 'success');
                                 clearDownloadProgress(fileId); // Clear progress on successful completion
@@ -748,96 +600,25 @@
          * Initialize the download page
          * 
          * Sets up the page with the injected token and filepath,
-         * updates the UI to show the filename and prompts for download confirmation.
+         * updates the UI to show the filename and download button.
          */
-        async function init() {
+        function init() {
             try {
                 // Update filename display
                 const displayName = filename.split('/').pop() || filename;
                 elements.filenameDisplay.textContent = displayName;
                 
-                // Update file status
-                const fileStatusElement = document.getElementById('fileStatus');
-                if (fileStatusElement) {
-                    fileStatusElement.textContent = 'Ready to download';
-                }
-                
-                // Show download form
+                // Show download button and hide loading state
                 elements.downloadForm.style.display = 'block';
                 
                 console.log('Download page initialized successfully');
                 console.log('Token present:', !!accessToken);
                 console.log('Filename:', filename);
                 
-                // Add a small delay for better UX, then prompt for download
-                setTimeout(async () => {
-                    await promptForDownload();
-                }, 1000); // 1 second delay to let user see the file info
-                
             } catch (error) {
                 console.error('Error initializing download page:', error);
                 showStatus('❌ Failed to initialize download page', 'error');
             }
-        }
-
-        /**
-         * Show download method choice dialog
-         */
-        async function promptForDownload() {
-            const fileStatusElement = document.getElementById('fileStatus');
-            const downloadChoice = document.getElementById('downloadChoice');
-            const autoDownloadInfo = document.querySelector('.auto-download-info');
-            
-            if (fileStatusElement) {
-                fileStatusElement.textContent = 'Choose download method';
-            }
-            
-            // Hide auto-download info and show choice dialog
-            if (autoDownloadInfo) {
-                autoDownloadInfo.style.display = 'none';
-            }
-            if (downloadChoice) {
-                downloadChoice.classList.add('show');
-            }
-            
-            // Check if File System Access API is available and update UI accordingly
-            if (!('showSaveFilePicker' in window)) {
-                // For browsers without File System Access API, auto-start with fallback
-                setTimeout(() => {
-                    startDownloadWithChoice(false);
-                }, 1500);
-                
-                // Update the choice dialog to reflect this
-                const choiceDescription = downloadChoice.querySelector('.choice-description');
-                if (choiceDescription) {
-                    choiceDescription.textContent = 'File will be downloaded to your Downloads folder.';
-                }
-                const chooseLocationBtn = downloadChoice.querySelector('.btn-primary');
-                if (chooseLocationBtn) {
-                    chooseLocationBtn.style.display = 'none';
-                }
-            }
-        }
-
-        /**
-         * Start download with user's chosen method
-         * This function is called from button clicks, ensuring proper user gesture
-         */
-        async function startDownloadWithChoice(useFileSystemAPI) {
-            const downloadChoice = document.getElementById('downloadChoice');
-            const fileStatusElement = document.getElementById('fileStatus');
-            
-            // Hide choice dialog
-            if (downloadChoice) {
-                downloadChoice.classList.remove('show');
-            }
-            
-            if (fileStatusElement) {
-                fileStatusElement.textContent = 'Starting download...';
-            }
-            
-            // Start the download with the chosen method
-            await startDownload(useFileSystemAPI);
         }
 
         // Initialize when page loads
