@@ -110,6 +110,72 @@
             background: #545b62;
         }
 
+        /* File info and auto-download styles */
+        .file-info {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            border-left: 4px solid #007bff;
+        }
+
+        .file-details {
+            margin-left: 10px;
+            flex-grow: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            font-size: 0.95rem;
+            word-break: break-all;
+        }
+
+        .file-status {
+            color: #666;
+            font-size: 0.85rem;
+            margin-top: 3px;
+        }
+
+        .auto-download-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 4px;
+            color: #1976d2;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .auto-download-info .icon {
+            margin-right: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .icon {
+            width: 16px;
+            height: 16px;
+            display: inline-block;
+        }
+
+        .icon-file:before {
+            content: "📄";
+        }
+
+        .icon-download:before {
+            content: "⬇️";
+        }
+
         /* Status messages */
         .status {
             margin: 20px 0;
@@ -203,13 +269,20 @@
         <div class="filename" id="filenameDisplay">Loading...</div>
         
         <!-- Download form -->
-        <div id="downloadForm">
-            <button id="downloadBtn" class="btn btn-primary" onclick="startDownload()">
-                Download File
-            </button>
-        </div>
-        
-        <!-- Status display -->
+        <div id="downloadForm" class="download-form" style="display: none;">
+            <div class="file-info">
+                <i class="icon icon-file"></i>
+                <div class="file-details">
+                    <div class="file-name" id="filenameDisplay">Loading...</div>
+                    <div class="file-status" id="fileStatus">Preparing download...</div>
+                </div>
+            </div>
+            
+            <div class="auto-download-info">
+                <i class="icon icon-download"></i>
+                <span>Download will start automatically</span>
+            </div>
+        </div>        <!-- Status display -->
         <div id="status" class="status hidden"></div>
         
         <!-- Progress bar -->
@@ -240,7 +313,6 @@
         // DOM element references
         const elements = {
             downloadForm: document.getElementById('downloadForm'),
-            downloadBtn: document.getElementById('downloadBtn'),
             status: document.getElementById('status'),
             closeBtn: document.getElementById('closeBtn'),
             filenameDisplay: document.getElementById('filenameDisplay'),
@@ -306,7 +378,21 @@
          * @param {boolean} downloading - Whether download is in progress
          */
         function setDownloadingState(downloading) {
-            elements.downloadForm.style.display = downloading ? 'none' : 'block';
+            // Update the auto-download info to show current state
+            const autoDownloadInfo = document.querySelector('.auto-download-info');
+            if (autoDownloadInfo) {
+                if (downloading) {
+                    autoDownloadInfo.innerHTML = '<i class="icon icon-download"></i><span>Download in progress...</span>';
+                    autoDownloadInfo.style.background = '#e8f5e8';
+                    autoDownloadInfo.style.borderColor = '#a5d6a7';
+                    autoDownloadInfo.style.color = '#2e7d32';
+                } else {
+                    autoDownloadInfo.innerHTML = '<i class="icon icon-download"></i><span>Download completed</span>';
+                    autoDownloadInfo.style.background = '#e3f2fd';
+                    autoDownloadInfo.style.borderColor = '#bbdefb';
+                    autoDownloadInfo.style.color = '#1976d2';
+                }
+            }
             elements.closeBtn.classList.toggle('hidden', !downloading);
         }
 
@@ -600,20 +686,34 @@
          * Initialize the download page
          * 
          * Sets up the page with the injected token and filepath,
-         * updates the UI to show the filename and download button.
+         * updates the UI to show the filename and automatically starts the download.
          */
-        function init() {
+        async function init() {
             try {
                 // Update filename display
                 const displayName = filename.split('/').pop() || filename;
                 elements.filenameDisplay.textContent = displayName;
                 
-                // Show download button and hide loading state
+                // Update file status
+                const fileStatusElement = document.getElementById('fileStatus');
+                if (fileStatusElement) {
+                    fileStatusElement.textContent = 'Preparing download...';
+                }
+                
+                // Show download form
                 elements.downloadForm.style.display = 'block';
                 
                 console.log('Download page initialized successfully');
                 console.log('Token present:', !!accessToken);
                 console.log('Filename:', filename);
+                
+                // Add a small delay for better UX, then start download automatically
+                setTimeout(async () => {
+                    if (fileStatusElement) {
+                        fileStatusElement.textContent = 'Starting download...';
+                    }
+                    await startDownload();
+                }, 1000); // 1 second delay to let user see the file info
                 
             } catch (error) {
                 console.error('Error initializing download page:', error);
