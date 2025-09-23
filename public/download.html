@@ -176,6 +176,49 @@
             content: "⬇️";
         }
 
+        /* Download choice dialog */
+        .download-choice {
+            display: none;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 20px;
+            margin: 15px 0;
+        }
+
+        .download-choice.show {
+            display: block;
+        }
+
+        .choice-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+
+        .choice-description {
+            color: #666;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+
+        .choice-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .choice-buttons .btn {
+            flex: 1;
+            margin: 0;
+        }
+
+        .btn-choice {
+            padding: 10px;
+            font-size: 0.85rem;
+        }
+
         /* Status messages */
         .status {
             margin: 20px 0;
@@ -282,6 +325,22 @@
                 <i class="icon icon-download"></i>
                 <span>Download starting shortly - confirmation required</span>
             </div>
+
+            <!-- Download choice dialog -->
+            <div id="downloadChoice" class="download-choice">
+                <div class="choice-title">Choose Download Method</div>
+                <div class="choice-description">
+                    How would you like to save this file?
+                </div>
+                <div class="choice-buttons">
+                    <button class="btn btn-primary btn-choice" onclick="startDownloadWithChoice(true)">
+                        📁 Choose Location
+                    </button>
+                    <button class="btn btn-secondary btn-choice" onclick="startDownloadWithChoice(false)">
+                        💾 Downloads Folder
+                    </button>
+                </div>
+            </div>
         </div>        <!-- Status display -->
         <div id="status" class="status hidden"></div>
         
@@ -313,6 +372,7 @@
         // DOM element references
         const elements = {
             downloadForm: document.getElementById('downloadForm'),
+            downloadChoice: document.getElementById('downloadChoice'),
             status: document.getElementById('status'),
             closeBtn: document.getElementById('closeBtn'),
             filenameDisplay: document.getElementById('filenameDisplay'),
@@ -721,23 +781,56 @@
         }
 
         /**
-         * Prompt user for download confirmation and method
+         * Show download method choice dialog
          */
         async function promptForDownload() {
             const fileStatusElement = document.getElementById('fileStatus');
+            const downloadChoice = document.getElementById('downloadChoice');
+            const autoDownloadInfo = document.querySelector('.auto-download-info');
             
-            // Check if File System Access API is available
-            const hasFileSystemAPI = 'showSaveFilePicker' in window;
-            
-            let message = `Ready to download: ${filename.split('/').pop()}\n\n`;
-            
-            if (hasFileSystemAPI) {
-                message += "Click OK to choose where to save the file, or Cancel to download to your default Downloads folder.";
-            } else {
-                message += "Click OK to download the file to your default Downloads folder.";
+            if (fileStatusElement) {
+                fileStatusElement.textContent = 'Choose download method';
             }
             
-            const useFileSystemAPI = hasFileSystemAPI && confirm(message);
+            // Hide auto-download info and show choice dialog
+            if (autoDownloadInfo) {
+                autoDownloadInfo.style.display = 'none';
+            }
+            if (downloadChoice) {
+                downloadChoice.classList.add('show');
+            }
+            
+            // Check if File System Access API is available and update UI accordingly
+            if (!('showSaveFilePicker' in window)) {
+                // For browsers without File System Access API, auto-start with fallback
+                setTimeout(() => {
+                    startDownloadWithChoice(false);
+                }, 1500);
+                
+                // Update the choice dialog to reflect this
+                const choiceDescription = downloadChoice.querySelector('.choice-description');
+                if (choiceDescription) {
+                    choiceDescription.textContent = 'File will be downloaded to your Downloads folder.';
+                }
+                const chooseLocationBtn = downloadChoice.querySelector('.btn-primary');
+                if (chooseLocationBtn) {
+                    chooseLocationBtn.style.display = 'none';
+                }
+            }
+        }
+
+        /**
+         * Start download with user's chosen method
+         * This function is called from button clicks, ensuring proper user gesture
+         */
+        async function startDownloadWithChoice(useFileSystemAPI) {
+            const downloadChoice = document.getElementById('downloadChoice');
+            const fileStatusElement = document.getElementById('fileStatus');
+            
+            // Hide choice dialog
+            if (downloadChoice) {
+                downloadChoice.classList.remove('show');
+            }
             
             if (fileStatusElement) {
                 fileStatusElement.textContent = 'Starting download...';
