@@ -400,6 +400,20 @@ For support and questions:
 
 ## Changelog
 
+### v1.3.0 (2025-09-24) - UI/UX Enhancement
+- 🎨 **SAP Fioneer Branding**: Added complete SAP Fioneer logo integration to download interface
+- 📐 **Compact Layout**: Optimized container sizing (280px) for focused, professional appearance
+- 🔘 **Button Styling**: Updated buttons to match SAP Fioneer design system specifications
+  - Font: BentonSans Medium, .875rem size, 400 weight
+  - Padding: .5rem 1rem with 2rem border radius
+  - Auto-sizing based on content
+- 📄 **Interface Text**: Updated "Download Manager" → "Download now", "Start Download" → "Start"
+- 📏 **Spacing Optimization**: Reduced line spacing and margins for tighter, more compact layout
+- 📱 **Scrollable File Paths**: Long file paths now scroll horizontally instead of wrapping
+- 🎯 **User Experience**: Removed unnecessary close button for cleaner interface
+- 🌟 **Design Consistency**: Achieved visual consistency between test harness and download interface
+- 🏷️ **Professional Styling**: Complete SAP Fioneer color scheme (yellow/black) implementation
+
 ### v1.2.0 (2025-09-22) - Production Deployment
 - 🚀 **Cloud Foundry Deployment**: Successfully deployed to SAP BTP Cloud Foundry
 - 🌐 **Production URLs**: Updated all hardcoded localhost URLs to production domain
