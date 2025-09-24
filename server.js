@@ -140,7 +140,7 @@ app.get('/download-page', async (req, res) => {
         console.log('Validating token against Artifactory...');
         
         // Validate by trying to access the actual file (HEAD request)
-        const artifactoryUrl = `${process.env.ARTIFACTORY_URL}${filepath}`;
+        const artifactoryUrl = `${process.env.ARTIFACTORY_URL}${filePath}`;
         const response = await axios.head(artifactoryUrl, {
             headers: {
                 'Authorization': `Bearer ${token}`
