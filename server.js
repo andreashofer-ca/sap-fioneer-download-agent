@@ -139,8 +139,9 @@ app.get('/download-page', async (req, res) => {
     try {
         console.log('Validating token against Artifactory...');
         
-        const tokenValidationUrl = `${process.env.ARTIFACTORY_URL}access/api/v1/tokens`;
-        const response = await axios.get(tokenValidationUrl, {
+        // Validate by trying to access the actual file (HEAD request)
+        const artifactoryUrl = `${process.env.ARTIFACTORY_URL}${filepath}`;
+        const response = await axios.head(artifactoryUrl, {
             headers: {
                 'Authorization': `Bearer ${token}`
             },
@@ -152,7 +153,7 @@ app.get('/download-page', async (req, res) => {
             return res.status(401).send('<h1>Error: Invalid Access Token</h1><p>The provided token is not valid or has expired.</p><p>Please check your token and try again.</p>');
         }
 
-        console.log('Token validation successful');
+        console.log('Token validation successful - file accessible');
         
     } catch (error) {
         console.log('ERROR: Token validation failed:', error.message);
