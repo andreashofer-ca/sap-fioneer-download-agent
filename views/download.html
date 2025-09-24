@@ -104,11 +104,7 @@
 
             try {
                 const fileHandle = await window.showSaveFilePicker({
-                    suggestedName: filename,
-                    types: [{
-                        description: 'All files',
-                        accept: { '*/*': ['.*'] }
-                    }]
+                    suggestedName: filename
                 });
                 
                 const writable = await fileHandle.createWritable();
