@@ -109,7 +109,7 @@ app.get('/', (req, res) => {
  * GET /download-page?filepath=path/to/file.sar
  * Authorization: Bearer jwt_token_here
  */
-app.get('/download-page', (req, res) => {
+app.get('/download-page', async (req, res) => {
     // Get token from Authorization header OR query parameter (for popup compatibility)
     const authHeader = req.headers.authorization;
     let token = null;
@@ -130,14 +130,45 @@ app.get('/download-page', (req, res) => {
     console.log('Download page requested with token:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');
     console.log('Download page requested with filepath:', filePath || 'NO FILEPATH');
 
-    if (!token) {
-        console.log('ERROR: No token provided in Authorization header');
-        return res.status(401).send('<h1>Error: No Access Token</h1><p>Please provide a valid Bearer token in the Authorization header.</p>');
-    }
-
     if (!filePath) {
         console.log('ERROR: No filepath provided');
         return res.status(400).send('<h1>Error: No File Path</h1><p>Please provide a valid file path in the query parameter.</p>');
+    }
+
+    // Validate token against Artifactory before serving the download page
+    try {
+        console.log('Validating token against Artifactory...');
+        
+        const tokenValidationUrl = `${process.env.ARTIFACTORY_URL}access/api/v1/tokens`;
+        const response = await axios.get(tokenValidationUrl, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            },
+            timeout: 10000
+        });
+
+        if (response.status !== 200) {
+            console.log(`ERROR: Token validation failed with status ${response.status}`);
+            return res.status(401).send('<h1>Error: Invalid Access Token</h1><p>The provided token is not valid or has expired.</p><p>Please check your token and try again.</p>');
+        }
+
+        console.log('Token validation successful');
+        
+    } catch (error) {
+        console.log('ERROR: Token validation failed:', error.message);
+        
+        if (error.response) {
+            const status = error.response.status;
+            if (status === 401) {
+                return res.status(401).send('<h1>Error: Invalid Access Token</h1><p>The provided token is not valid or has expired.</p><p>Please check your token and try again.</p>');
+            } else if (status === 403) {
+                return res.status(403).send('<h1>Error: Access Denied</h1><p>The provided token does not have sufficient permissions.</p><p>Please use a token with appropriate access rights.</p>');
+            } else {
+                return res.status(status).send(`<h1>Error: Token Validation Failed</h1><p>Artifactory returned status ${status}</p><p>Please check your token and try again.</p>`);
+            }
+        } else {
+            return res.status(500).send('<h1>Error: Token Validation Failed</h1><p>Unable to validate token with Artifactory.</p><p>Please try again later or check your network connection.</p>');
+        }
     }
     
     // Read the download.html template and inject the token and filepath
