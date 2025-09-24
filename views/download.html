@@ -32,7 +32,7 @@
         
         <div id="downloadForm">
             <button id="downloadBtn" class="btn btn-primary" onclick="startDownload()">
-                📥 Start Download
+                Start Download
             </button>
         </div>
 
@@ -92,7 +92,7 @@
 
         function setDownloadingState(downloading) {
             elements.downloadBtn.disabled = downloading;
-            elements.downloadBtn.textContent = downloading ? '⏳ Downloading...' : '📥 Start Download';
+            elements.downloadBtn.textContent = downloading ? 'Downloading...' : 'Start Download';
             elements.closeBtn.classList.toggle('hidden', downloading);
         }
 
@@ -107,7 +107,7 @@
                     suggestedName: filename,
                     types: [{
                         description: 'All files',
-                        accept: { '*/*': ['*'] }
+                        accept: { '*/*': ['.*'] }
                     }]
                 });
                 
@@ -162,7 +162,7 @@
         // Main download function
         async function startDownload() {
             if (!accessToken || !filename) {
-                showStatus('❌ Missing token or filename', 'error');
+                showStatus('Missing token or filename', 'error');
                 return;
             }
 
@@ -222,15 +222,15 @@
                         try {
                             const saved = await saveFile(xhr.response, downloadFilename);
                             if (saved) {
-                                showStatus('✅ File downloaded successfully!', 'success');
+                                showStatus('File downloaded successfully!', 'success');
                                 clearDownloadProgress(fileId);
                                 setTimeout(() => { hideProgress(); window.close(); }, 3000);
                             } else {
-                                showStatus('❌ File not saved.', 'error');
+                                showStatus('File not saved.', 'error');
                                 setDownloadingState(false);
                             }
                         } catch (err) {
-                            showStatus(`❌ Save failed: ${err.message}`, 'error');
+                            showStatus(`Save failed: ${err.message}`, 'error');
                             setDownloadingState(false);
                         }
                     } else {
@@ -242,29 +242,29 @@
                                     const errorData = JSON.parse(reader.result);
                                     msg = errorData.message || errorData.error || msg;
                                 } catch (e) { /* ignore */ }
-                                showStatus(`❌ ${msg}`, 'error');
+                                showStatus(`${msg}`, 'error');
                             };
                             reader.readAsText(xhr.response);
                         } catch (e) {
-                            showStatus(`❌ ${msg}`, 'error');
+                            showStatus(`${msg}`, 'error');
                         }
                         setDownloadingState(false);
                     }
                 });
 
                 xhr.addEventListener('error', () => {
-                    showStatus('❌ Network error occurred', 'error');
+                    showStatus('Network error occurred', 'error');
                     setDownloadingState(false);
                 });
 
                 xhr.addEventListener('timeout', () => {
-                    showStatus('❌ Download timed out', 'error');
+                    showStatus('Download timed out', 'error');
                     setDownloadingState(false);
                 });
 
                 xhr.send();
             } catch (error) {
-                showStatus(`❌ Error: ${error.message}`, 'error');
+                showStatus(`Error: ${error.message}`, 'error');
                 setDownloadingState(false);
             }
         }
@@ -272,12 +272,12 @@
         // Initialize
         window.addEventListener('DOMContentLoaded', () => {
             if (!filename) {
-                showStatus('❌ No filename specified', 'error');
+                showStatus('No filename specified', 'error');
                 return;
             }
             
             if (!accessToken) {
-                showStatus('❌ No access token provided', 'error');
+                showStatus('No access token provided', 'error');
                 return;
             }
 
