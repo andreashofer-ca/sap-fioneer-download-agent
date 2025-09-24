@@ -5,413 +5,176 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SAP Fioneer Download Manager</title>
     <style>
-        /* Reset and base styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        /* Main container */
-        .container {
-            background: white;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 400px;
-            text-align: center;
-        }
-
-        /* Typography */
-        h1 {
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 1.5rem;
-            font-weight: 600;
-        }
-
-        .filename {
-            color: #666;
-            font-size: 0.9rem;
-            margin-bottom: 25px;
-            font-family: monospace;
-            background: #f8f9fa;
-            padding: 8px;
-            border-radius: 4px;
-        }
-
-        /* Form elements */
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #333;
-        }
-
-        input[type="text"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            font-family: monospace;
-        }
-
-        input[type="text"]:focus {
-            outline: none;
-            border-color: #007bff;
-            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-        }
-
-        /* Buttons */
-        .btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 4px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: background-color 0.2s;
-        }
-
-        .btn-primary {
-            background: #007bff;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #0056b3;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-            margin-top: 10px;
-        }
-
-        .btn-secondary:hover {
-            background: #545b62;
-        }
-
-        /* Status messages */
-        .status {
-            margin: 20px 0;
-            padding: 12px;
-            border-radius: 4px;
-            font-size: 0.9rem;
-        }
-
-        .status.loading {
-            background: #e3f2fd;
-            color: #1976d2;
-            border: 1px solid #bbdefb;
-        }
-
-        .status.success {
-            background: #e8f5e8;
-            color: #2e7d32;
-            border: 1px solid #a5d6a7;
-        }
-
-        .status.error {
-            background: #ffebee;
-            color: #c62828;
-            border: 1px solid #ef9a9a;
-        }
-
-        /* Loading spinner */
-        .spinner {
-            display: inline-block;
-            width: 16px;
-            height: 16px;
-            border: 2px solid #ccc;
-            border-top: 2px solid #007bff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Progress bar styles */
-        .progress-container {
-            margin: 15px 0;
-            display: none;
-        }
-
-        .progress-bar {
-            width: 100%;
-            height: 20px;
-            background-color: #f0f0f0;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 8px;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(45deg, #007bff, #0056b3);
-            width: 0%;
-            transition: width 0.3s ease;
-            border-radius: 10px;
-        }
-
-        .progress-text {
-            font-size: 0.85rem;
-            color: #666;
-            text-align: center;
-        }
-
-        /* Info text */
-        .info {
-            font-size: 0.85rem;
-            color: #666;
-            margin-top: 15px;
-            line-height: 1.4;
-        }
-
-        /* Hidden utility */
-        .hidden {
-            display: none;
-        }
+        body { font-family: system-ui, sans-serif; padding: 20px; max-width: 400px; margin: 0 auto; }
+        .hidden { display: none; }
+        .container { text-align: center; }
+        .filename { font-family: monospace; background: #f5f5f5; padding: 8px; margin: 10px 0; border-radius: 4px; }
+        .btn { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-secondary { background: #6c757d; color: white; }
+        .btn:disabled { background: #ccc; cursor: not-allowed; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 4px; }
+        .status.loading { background: #e3f2fd; }
+        .status.success { background: #e8f5e8; color: #2e7d32; }
+        .status.error { background: #ffebee; color: #c62828; }
+        .progress-container { margin: 20px 0; }
+        .progress-bar { width: 100%; height: 20px; background: #e0e0e0; border-radius: 10px; overflow: hidden; }
+        .progress-fill { height: 100%; background: #007bff; width: 0%; transition: width 0.3s; }
+        .progress-text { margin-top: 5px; font-size: 14px; }
+        .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #ccc; border-top: 2px solid #007bff; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 8px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
-        <h1>SAP Fioneer Download Manager</h1>
+        <h1>Download Manager</h1>
         <div class="filename" id="filenameDisplay">Loading...</div>
         
-        <!-- Download form -->
         <div id="downloadForm">
             <button id="downloadBtn" class="btn btn-primary" onclick="startDownload()">
-                Download File
+                📥 Start Download
             </button>
         </div>
-        
-        <!-- Status display -->
+
         <div id="status" class="status hidden"></div>
-        
-        <!-- Progress bar -->
+
         <div id="progressContainer" class="progress-container">
             <div class="progress-bar">
                 <div id="progressFill" class="progress-fill"></div>
             </div>
             <div id="progressText" class="progress-text">0%</div>
         </div>
-        
-        <!-- Close button -->
+
         <button id="closeBtn" class="btn btn-secondary hidden" onclick="window.close()">
-            Close Window
+            Close
         </button>
     </div>
 
     <script>
-        /**
-         * SAP Fioneer Download Manager
-         * 
-         * This script handles file downloads with user-selectable save locations.
-         * Uses the File System Access API for modern browsers with fallback support.
-         * 
-         * @author SAP Fioneer
-         * @version 1.0.0
-         */
-
-        // DOM element references
+        // DOM elements
         const elements = {
-            downloadForm: document.getElementById('downloadForm'),
             downloadBtn: document.getElementById('downloadBtn'),
-            status: document.getElementById('status'),
-            closeBtn: document.getElementById('closeBtn'),
             filenameDisplay: document.getElementById('filenameDisplay'),
+            status: document.getElementById('status'),
             progressContainer: document.getElementById('progressContainer'),
             progressFill: document.getElementById('progressFill'),
-            progressText: document.getElementById('progressText')
+            progressText: document.getElementById('progressText'),
+            closeBtn: document.getElementById('closeBtn'),
+            downloadForm: document.getElementById('downloadForm')
         };
-
-        // Get token from server injection (secure approach)
-        // const urlParams = new URLSearchParams(window.location.search);
-        // const accessToken = urlParams.get('token');
-
-        // Default filename (will be replaced by server injection)
-        // const filename = 'Fioneer AI Agent/REL/1.0.0/K-100COINFAA.SAR';
 
         // Variables to be injected by server
         const accessToken = null; // Will be replaced by server
         const filename = null; // Will be replaced by server
 
-        /**
-         * Display status message to user
-         * @param {string} message - Message to display
-         * @param {string} type - Type of message: 'loading', 'success', 'error'
-         * @param {boolean} showSpinner - Whether to show loading spinner
-         */
+        // Utility functions
         function showStatus(message, type = 'loading', showSpinner = false) {
-            elements.status.className = `status ${type}`;
             elements.status.innerHTML = showSpinner 
                 ? `<span class="spinner"></span>${message}`
                 : message;
+            elements.status.className = `status ${type}`;
             elements.status.classList.remove('hidden');
         }
 
-        /**
-         * Hide status message
-         */
         function hideStatus() {
             elements.status.classList.add('hidden');
         }
 
-        /**
-         * Update download progress
-         * @param {number} percentage - Progress percentage (0-100)
-         * @param {string} text - Progress text
-         */
         function updateProgress(percentage, text) {
             elements.progressFill.style.width = `${percentage}%`;
             elements.progressText.textContent = text || `${Math.round(percentage)}%`;
-            elements.progressContainer.style.display = 'block';
+            elements.progressContainer.classList.remove('hidden');
         }
 
-        /**
-         * Hide progress bar
-         */
         function hideProgress() {
-            elements.progressContainer.style.display = 'none';
-            elements.progressFill.style.width = '0%';
-            elements.progressText.textContent = '0%';
+            elements.progressContainer.classList.add('hidden');
         }
 
-        /**
-         * Show/hide form and buttons
-         * @param {boolean} downloading - Whether download is in progress
-         */
         function setDownloadingState(downloading) {
-            elements.downloadForm.style.display = downloading ? 'none' : 'block';
-            elements.closeBtn.classList.toggle('hidden', !downloading);
+            elements.downloadBtn.disabled = downloading;
+            elements.downloadBtn.textContent = downloading ? '⏳ Downloading...' : '📥 Start Download';
+            elements.closeBtn.classList.toggle('hidden', downloading);
         }
 
-        /**
-         * Download file using File System Access API or fallback method
-         * 
-         * Attempts to use the modern File System Access API for user-selectable
-         * save locations. Falls back to traditional blob download for older browsers.
-         * 
-         * @async
-         * @param {Blob} blob - File blob to save
-         * @param {string} filename - Suggested filename for the download
-         * @returns {Promise<boolean>} True if file was saved successfully, false otherwise
-         * @throws {Error} When File System Access API fails and no fallback is available
-         */
+        // File save function
         async function saveFile(blob, filename) {
-            // Try modern File System Access API (Chrome 86+, Edge 86+)
-            if ('showSaveFilePicker' in window) {
-                try {
-                    showStatus('Choose save location...', 'loading');
-                    
-                    const fileHandle = await window.showSaveFilePicker({
-                        suggestedName: filename,
-                        types: [{
-                            description: 'SAR files',
-                            accept: { 'application/octet-stream': ['.sar'] }
-                        }]
-                    });
-                    
-                    showStatus('Saving file...', 'loading', true);
-                    
-                    const writable = await fileHandle.createWritable();
-                    await writable.write(blob);
-                    await writable.close();
-                    
-                    showStatus('✅ File saved successfully!', 'success');
-                    return true;
-                    
-                } catch (err) {
-                    if (err.name === 'AbortError') {
-                        showStatus('❌ Save canceled by user', 'error');
-                        setDownloadingState(false);
-                        return false;
-                    }
+            if (!('showSaveFilePicker' in window)) {
+                throw new Error('File System Access API not supported in this browser');
+            }
+
+            try {
+                const fileHandle = await window.showSaveFilePicker({
+                    suggestedName: filename,
+                    types: [{
+                        description: 'All files',
+                        accept: { '*/*': ['*'] }
+                    }]
+                });
+                
+                const writable = await fileHandle.createWritable();
+                await writable.write(blob);
+                await writable.close();
+                return true;
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('Save failed:', err);
                     throw err;
                 }
-            } else {
-                // Fallback for older browsers
-                showStatus('Starting download...', 'loading', true);
-                
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = filename;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                showStatus('✅ Download started! Check your Downloads folder.', 'success');
-                return true;
+                return false;
             }
         }
 
-        /**
-         * Main download function using XMLHttpRequest streaming with resume capability
-         * 
-         * Downloads file with progress tracking and better error handling for large files.
-         * Supports resume capability for interrupted downloads up to 5GB.
-         * 
-         * Features:
-         * - Streaming download to handle large files
-         * - Real-time progress tracking with MB/GB display
-         * - Resume capability for interrupted downloads
-         * - Progress persistence across browser sessions
-         * - 10-minute timeout for large file downloads
-         * - Comprehensive error handling with user-friendly messages
-         * - Automatic file saving using File System Access API or fallback
-         * 
-         * @async
-         * @returns {Promise<void>} Completes when download finishes or fails
-         * @throws {Error} When initialization fails or network errors occur
-         */
+        // Progress management
+        function getFileId(filename) {
+            return btoa(filename).replace(/[/+=]/g, '');
+        }
+
+        function saveDownloadProgress(fileId, loaded, total, filename) {
+            try {
+                localStorage.setItem(`download_${fileId}`, JSON.stringify({
+                    loaded, total, filename, timestamp: Date.now()
+                }));
+            } catch (e) { console.warn('Failed to save progress:', e); }
+        }
+
+        function loadDownloadProgress(fileId) {
+            try {
+                const data = localStorage.getItem(`download_${fileId}`);
+                if (data) {
+                    const progress = JSON.parse(data);
+                    // Clear old progress (older than 24 hours)
+                    if (Date.now() - progress.timestamp > 24 * 60 * 60 * 1000) {
+                        localStorage.removeItem(`download_${fileId}`);
+                        return null;
+                    }
+                    return progress;
+                }
+            } catch (e) { console.warn('Failed to load progress:', e); }
+            return null;
+        }
+
+        function clearDownloadProgress(fileId) {
+            try {
+                localStorage.removeItem(`download_${fileId}`);
+            } catch (e) { console.warn('Failed to clear progress:', e); }
+        }
+
+        // Main download function
         async function startDownload() {
-            if (!accessToken) {
-                showStatus('❌ No access token provided. Please launch from the test harness.', 'error');
+            if (!accessToken || !filename) {
+                showStatus('❌ Missing token or filename', 'error');
                 return;
             }
 
-            const downloadFilename = filename.split('/').pop() || 'download';
+            const downloadFilename = filename.split('/').pop();
             const downloadUrl = `https://sap-fioneer-download-manager.cfapps.eu10-005.hana.ondemand.com/download?filename=${encodeURIComponent(filename)}`;
             const fileId = getFileId(filename);
             
             let startByte = 0;
-            let existingProgress = null;
-
-            // Check for existing progress
-            existingProgress = loadDownloadProgress(fileId);
+            const existingProgress = loadDownloadProgress(fileId);
+            
             if (existingProgress && existingProgress.loaded > 0) {
-                const resume = confirm(
-                    `Found incomplete download (${(existingProgress.loaded / 1024 / 1024).toFixed(1)}MB of ${(existingProgress.total / 1024 / 1024).toFixed(1)}MB).\n\n` +
-                    `Would you like to resume the download from where it left off?\n\n` +
-                    `Click "OK" to resume or "Cancel" to start over.`
-                );
-                
+                const resume = confirm(`Found incomplete download (${(existingProgress.loaded / 1024 / 1024).toFixed(1)}MB of ${(existingProgress.total / 1024 / 1024).toFixed(1)}MB). Resume?`);
                 if (resume) {
                     startByte = existingProgress.loaded;
                 } else {
@@ -422,21 +185,17 @@
             try {
                 setDownloadingState(true);
                 hideStatus();
-                updateProgress(0, startByte > 0 ? 'Resuming download...' : 'Initializing download...');
+                updateProgress(0, startByte > 0 ? 'Resuming...' : 'Starting...');
 
-                // Create XHR to stream the file and receive progress events
                 const xhr = new XMLHttpRequest();
                 xhr.open('GET', downloadUrl, true);
                 xhr.responseType = 'blob';
-                xhr.timeout = 600000; // 10 minutes
-
+                xhr.timeout = 600000;
                 xhr.setRequestHeader('Accept', 'application/octet-stream');
                 xhr.setRequestHeader('Authorization', `Bearer ${accessToken}`);
                 
-                // Add Range header for resume
                 if (startByte > 0) {
                     xhr.setRequestHeader('Range', `bytes=${startByte}-`);
-                    console.log(`Resuming download from byte ${startByte}`);
                 }
 
                 let totalSize = existingProgress ? existingProgress.total : 0;
@@ -444,23 +203,16 @@
 
                 xhr.addEventListener('progress', (event) => {
                     if (event.lengthComputable) {
-                        // For resumed downloads, add the previously downloaded bytes
                         const currentLoaded = loadedSoFar + event.loaded;
                         totalSize = totalSize || (loadedSoFar + event.total);
-                        
                         const percent = (currentLoaded / totalSize) * 100;
                         const loadedMB = (currentLoaded / 1024 / 1024).toFixed(1);
                         const totalMB = (totalSize / 1024 / 1024).toFixed(1);
                         updateProgress(percent, `${Math.round(percent)}% (${loadedMB}MB / ${totalMB}MB)`);
                         
-                        // Save progress every 1MB
                         if (event.loaded > 1024 * 1024) {
                             saveDownloadProgress(fileId, currentLoaded, totalSize, downloadFilename);
                         }
-                    } else {
-                        const currentLoaded = loadedSoFar + event.loaded;
-                        const loadedMB = (currentLoaded / 1024 / 1024).toFixed(1);
-                        updateProgress(50, `Downloading... ${loadedMB}MB`);
                     }
                 });
 
@@ -468,161 +220,71 @@
                     if (xhr.status >= 200 && xhr.status < 300) {
                         updateProgress(100, 'Download completed');
                         try {
-                            // For resumed downloads, we need to combine the existing blob with the new blob
-                            let finalBlob = xhr.response;
-                            
-                            if (startByte > 0 && existingProgress) {
-                                // This is a resumed download - we need to handle partial content
-                                // Note: In a production implementation, you'd need to store the 
-                                // previously downloaded data and combine it with the new data
-                                console.log('Resume download completed - combining data would be needed for production');
-                            }
-                            
-                            const saved = await saveFile(finalBlob, downloadFilename);
+                            const saved = await saveFile(xhr.response, downloadFilename);
                             if (saved) {
                                 showStatus('✅ File downloaded successfully!', 'success');
-                                clearDownloadProgress(fileId); // Clear progress on successful completion
+                                clearDownloadProgress(fileId);
                                 setTimeout(() => { hideProgress(); window.close(); }, 3000);
                             } else {
                                 showStatus('❌ File not saved.', 'error');
                                 setDownloadingState(false);
                             }
                         } catch (err) {
-                            console.error('Save failed:', err);
                             showStatus(`❌ Save failed: ${err.message}`, 'error');
                             setDownloadingState(false);
                         }
                     } else {
-                        // Try to parse server JSON error
                         let msg = `Server Error (${xhr.status})`;
                         try {
                             const reader = new FileReader();
                             reader.onload = () => {
                                 try {
-                                    const json = JSON.parse(reader.result);
-                                    if (json.message) msg = json.message;
-                                } catch (e) {
-                                    /* ignore JSON parse errors */
-                                }
+                                    const errorData = JSON.parse(reader.result);
+                                    msg = errorData.message || errorData.error || msg;
+                                } catch (e) { /* ignore */ }
                                 showStatus(`❌ ${msg}`, 'error');
-                                setDownloadingState(false);
                             };
-                            reader.readAsText(xhr.response || new Blob());
+                            reader.readAsText(xhr.response);
                         } catch (e) {
                             showStatus(`❌ ${msg}`, 'error');
-                            setDownloadingState(false);
                         }
+                        setDownloadingState(false);
                     }
                 });
 
                 xhr.addEventListener('error', () => {
-                    hideProgress();
-                    showStatus('❌ Network error during download. Progress has been saved - you can resume later.', 'error');
+                    showStatus('❌ Network error occurred', 'error');
                     setDownloadingState(false);
                 });
 
                 xhr.addEventListener('timeout', () => {
-                    hideProgress();
-                    showStatus('❌ Download timed out. Progress has been saved - you can resume later.', 'error');
+                    showStatus('❌ Download timed out', 'error');
                     setDownloadingState(false);
                 });
 
-                updateProgress(5, 'Connecting to server...');
                 xhr.send();
-
             } catch (error) {
-                hideProgress();
-                console.error('Download initialization failed:', error);
-                showStatus(`❌ ${error.message || 'Failed to start download'}`, 'error');
+                showStatus(`❌ Error: ${error.message}`, 'error');
                 setDownloadingState(false);
             }
         }
 
-        /**
-         * Save download progress to localStorage
-         * @param {string} fileId - Unique identifier for the download
-         * @param {number} loaded - Bytes downloaded so far
-         * @param {number} total - Total file size in bytes
-         * @param {string} filename - Name of the file being downloaded
-         */
-        function saveDownloadProgress(fileId, loaded, total, filename) {
-            const progress = {
-                loaded,
-                total,
-                filename,
-                timestamp: Date.now(),
-                url: `https://sap-fioneer-download-manager.cfapps.eu10-005.hana.ondemand.com/download?filename=${encodeURIComponent(filename)}`
-            };
-            localStorage.setItem(`download_${fileId}`, JSON.stringify(progress));
-        }
-
-        /**
-         * Load download progress from localStorage
-         * @param {string} fileId - Unique identifier for the download
-         * @returns {Object|null} Progress data or null if not found
-         */
-        function loadDownloadProgress(fileId) {
-            const data = localStorage.getItem(`download_${fileId}`);
-            if (!data) return null;
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!filename) {
+                showStatus('❌ No filename specified', 'error');
+                return;
+            }
             
-            try {
-                const progress = JSON.parse(data);
-                // Check if progress is recent (within last 24 hours)
-                if (Date.now() - progress.timestamp > 24 * 60 * 60 * 1000) {
-                    localStorage.removeItem(`download_${fileId}`);
-                    return null;
-                }
-                return progress;
-            } catch (e) {
-                localStorage.removeItem(`download_${fileId}`);
-                return null;
+            if (!accessToken) {
+                showStatus('❌ No access token provided', 'error');
+                return;
             }
-        }
 
-        /**
-         * Clear download progress from localStorage
-         * @param {string} fileId - Unique identifier for the download
-         */
-        function clearDownloadProgress(fileId) {
-            localStorage.removeItem(`download_${fileId}`);
-        }
-
-        /**
-         * Generate unique file ID for progress tracking
-         * @param {string} filename - Name of the file
-         * @returns {string} Unique file identifier
-         */
-        function getFileId(filename) {
-            return btoa(filename).replace(/[^a-zA-Z0-9]/g, '').substring(0, 10);
-        }
-
-        /**
-         * Initialize the download page
-         * 
-         * Sets up the page with the injected token and filepath,
-         * updates the UI to show the filename and download button.
-         */
-        function init() {
-            try {
-                // Update filename display
-                const displayName = filename.split('/').pop() || filename;
-                elements.filenameDisplay.textContent = displayName;
-                
-                // Show download button and hide loading state
-                elements.downloadForm.style.display = 'block';
-                
-                console.log('Download page initialized successfully');
-                console.log('Token present:', !!accessToken);
-                console.log('Filename:', filename);
-                
-            } catch (error) {
-                console.error('Error initializing download page:', error);
-                showStatus('❌ Failed to initialize download page', 'error');
-            }
-        }
-
-        // Initialize when page loads
-        window.addEventListener('load', init);
+            elements.filenameDisplay.textContent = filename.split('/').pop();
+            hideProgress();
+            showStatus('Ready to download', 'loading');
+        });
     </script>
 </body>
 </html>
