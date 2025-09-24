@@ -78,15 +78,16 @@ app.use((req, res, next) => {
     }
 });
 
-// Serve static files from public directory
-app.use(express.static('public'));
-
 // Serve node_modules for frontend libraries
 app.use('/node_modules', express.static('node_modules'));
 
 // Route to serve the main page
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+    res.json({
+        service: 'SAP Fioneer Download Manager',
+        status: 'Available',
+        timestamp: new Date().toISOString()
+    });
 });
 
 // Route to serve the download page
@@ -140,7 +141,7 @@ app.get('/download-page', (req, res) => {
     }
     
     // Read the download.html template and inject the token and filepath
-    const downloadPagePath = path.join(__dirname, 'public', 'download.html');
+    const downloadPagePath = path.join(__dirname, 'views', 'download.html');
     
     const fs = require('fs');
     fs.readFile(downloadPagePath, 'utf8', (err, data) => {
