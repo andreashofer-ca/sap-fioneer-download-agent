@@ -1,4 +1,8 @@
-# SA## Features
+# SAP Fioneer Download Manager
+
+A secure, modern web application for downloading large files from Artifactory with real-time progress tracking and user-selectable save locations using XMLHttpRequest streaming and the HTML5 File System Access API.
+
+## Features
 
 - 🚀 **Large File Support**: Efficient streaming downloads handle files of any size without memory issues
 - 📊 **Real-time Progress**: Live progress bars with MB/GB tracking during downloads
@@ -11,46 +15,43 @@
 - ⚡ **Streaming Architecture**: XMLHttpRequest streaming for optimal performance
 - 🛡️ **Error Recovery**: Comprehensive error handling with user-friendly messages
 - 🗂️ **Repository Browser**: Browse Artifactory repositories with intuitive folder navigation
-- 🎯 **One-Click Downloads**: Click files to instantly initiate downloadswnload Manager
-
-A secure, modern web application for downloading large files from Artifactory with real-time progress tracking and user-selectable save locations using XMLHttpRequest streaming and the HTML5 File System Access API.
-
-## Features
-
-- � **Large File Support**: Efficient streaming downloads handle files of any size without memory issues
-- 📊 **Real-time Progress**: Live progress bars with MB/GB tracking during downloads
-- �🔐 **Secure Authentication**: JWT token-based authentication with Artifactory
-- 📁 **User-Selectable Locations**: Modern File System Access API for choosing download locations
-- 🎯 **Dynamic File Paths**: Support for complex repository structures and file paths
-- 🔍 **Token Validation**: Real-time token attribute checking with detailed logging
-- 🌐 **Cross-Browser Support**: Fallback to traditional downloads for older browsers
-- 📱 **Responsive Design**: Clean, professional UI that works on all devices
-- ⚡ **Streaming Architecture**: XMLHttpRequest streaming for optimal performance
-- 🛡️ **Error Recovery**: Comprehensive error handling with user-friendly messages
+- 🎯 **One-Click Downloads**: Click files to instantly initiate downloads
 
 ## Architecture
 
 ```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Test Harness  │    │   Node.js Server │    │   Artifactory   │
-│   (test.html)   │────│   (server.js)    │────│     API         │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-        │                      │
-┌─────────────────┐    ┌──────────────────┐
-│   Repo Browser  │    │ Download Manager │
-│  (browse.html)  │    │ (download.html)  │
-│   API Proxy     │    │  XMLHttpRequest  │
-│                 │    │    Streaming     │
-└─────────────────┘    └──────────────────┘
+┌─────────────────┐
+│   ServiceNow    │  (Production)
+│  Web Interface  │───┐
+└─────────────────┘   │
+                      │
+┌─────────────────┐   │   ┌──────────────────┐    ┌─────────────────┐
+│   Test Harness  │   │   │   Node.js Server │    │   Artifactory   │
+│   (test.html)   │───┼───│   (server.js)    │────│     API         │
+└─────────────────┘   │   └──────────────────┘    └─────────────────┘
+                      │           │
+┌─────────────────┐   │           │
+│   Repo Browser  │───┘           │
+│  (browse.html)  │               │
+│   API Proxy     │               │
+└─────────────────┘               │
+                                  │
+                         ┌──────────────────┐
+                         │ Download Manager │
+                         │ (download.html)  │
+                         │  XMLHttpRequest  │
+                         │    Streaming     │
+                         └──────────────────┘
 ```
 
 ### Components
 
-1. **Repository Browser** (`browse.html`): Standalone interface for browsing Artifactory repositories
-2. **Test Harness** (`test.html`): Interface for configuring downloads with specific file paths
-3. **Node.js Server** (`server.js`): Backend API with streaming proxy and token validation
-4. **Download Manager** (`views/download.html`): Popup interface with XMLHttpRequest streaming
-5. **Environment Config** (`.env`): Secure configuration for Artifactory credentials
+1. **ServiceNow** (Production): Customer-facing web interface that calls the Node.js server for downloads
+2. **Repository Browser** (`browse.html`): Standalone interface for browsing Artifactory repositories
+3. **Test Harness** (`test.html`): Development/testing interface for configuring downloads with specific file paths
+4. **Node.js Server** (`server.js`): Backend API with streaming proxy and token validation
+5. **Download Manager** (`views/download.html`): Popup interface with XMLHttpRequest streaming
+6. **Environment Config** (`.env`): Secure configuration for Artifactory credentials
 
 ### Streaming Architecture
 
