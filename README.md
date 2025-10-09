@@ -135,33 +135,54 @@ PORT=3000
 
 The repository browser provides an intuitive interface for exploring and downloading files:
 
+#### Setup (First Time Only)
+
+1. **Copy the Template**:
+   ```bash
+   cp browse.html.example browse.html
+   ```
+
+2. **Add Your Tokens**:
+   - Open `browse.html` in a text editor
+   - Find the "ADD YOUR TOKENS HERE" section around line 324
+   - Add your tokens to the dropdown, for example:
+   ```html
+   <option value="cmVmdGtuOjAxOjAwMDAwMDAwMDA6...">My Token Name</option>
+   ```
+   - Save the file (it's gitignored to protect your secrets)
+
+#### Using the Browser
+
 1. **Open the Browser**: 
    - Open `browse.html` in your web browser (standalone file)
-   - Ensure the local server is running on `http://localhost:3000`
+   - Ensure the production server is accessible or run locally with `npm start`
 
 2. **Configure Access**:
-   - Select Access Token from dropdown (FAA, FDS, EH, or Custom)
+   - Select your Access Token from dropdown (or choose "Custom Token" and paste one)
+   - Optionally enter your User ID for download tracking
    - Enter Repository name (default: "download")
    - The Artifactory URL is pre-configured
 
 3. **Browse Repository**:
    - Click "Browse" to load the root directory
-   - Click on folders (📁) to navigate into them
+   - Click on any folder name in the breadcrumb to navigate directly to it
+   - Click on folders (�) to navigate into them
    - Click on files (📄) to start download immediately
-   - Use "Go Up" to navigate to parent folder
-   - Use "Home" to return to root directory
 
 4. **Download Files**:
    - Simply click on any file to launch the download manager
    - The download manager opens in a popup window
    - Files are downloaded with progress tracking
+   - User ID (if provided) is passed to the download service for tracking
 
 **Features**:
-- Breadcrumb navigation showing current path
+- Interactive breadcrumb navigation with clickable path segments
 - File sizes and modification dates
-- Folder/file icons for easy identification
+- Microsoft Fluent UI folder/file icons for easy identification
 - Automatic path reset when token changes
-- CORS-free API calls via localhost proxy
+- User ID tracking for download attribution
+- CORS-free API calls via production proxy
+- Responsive design with SAP Fioneer branding
 
 ### Basic Download Flow (Test Harness)
 
@@ -289,7 +310,8 @@ For local development, follow the Quick Start section above.
 ### Project Structure
 ```
 ├── server.js              # Express server with API endpoints
-├── browse.html            # Standalone repository browser (gitignored)
+├── browse.html.example    # Repository browser template
+├── browse.html            # Standalone repository browser (gitignored - contains tokens)
 ├── test.html.example      # Test harness template (copy to test.html)
 ├── test.html              # Test harness (gitignored - contains tokens)
 ├── manifest.yml           # Cloud Foundry deployment configuration
@@ -300,6 +322,13 @@ For local development, follow the Quick Start section above.
 ├── .env                   # Environment variables (gitignored)
 └── README.md              # This file
 ```
+
+**Template Files**:
+- `browse.html.example`: Copy to `browse.html` and add your access tokens
+- `test.html.example`: Copy to `test.html` and configure as needed
+- `.env.example`: Copy to `.env` and add your Artifactory credentials
+
+All `.example` files are tracked in git and contain no sensitive information. The actual configuration files (`browse.html`, `test.html`, `.env`) are gitignored to protect your secrets.
 
 ### Key Technologies
 - **Backend**: Node.js, Express.js, Axios with streaming support
