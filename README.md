@@ -293,7 +293,6 @@ For local development, follow the Quick Start section above.
 ├── test.html              # Test harness (gitignored - contains tokens)
 ├── manifest.yml           # Cloud Foundry deployment configuration
 ├── views/
-│   ├── browse.html        # Repository browser (old version)
 │   └── download.html      # Download manager popup
 ├── package.json           # Node.js dependencies
 ├── .env.example           # Environment template
