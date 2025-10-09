@@ -1,4 +1,17 @@
-# SAP Fioneer Download Manager
+# SA## Features
+
+- 🚀 **Large File Support**: Efficient streaming downloads handle files of any size without memory issues
+- 📊 **Real-time Progress**: Live progress bars with MB/GB tracking during downloads
+- 🔐 **Secure Authentication**: JWT token-based authentication with Artifactory
+- 📁 **User-Selectable Locations**: Modern File System Access API for choosing download locations
+- 🎯 **Dynamic File Paths**: Support for complex repository structures and file paths
+- 🔍 **Token Validation**: Real-time token attribute checking with detailed logging
+- 🌐 **Cross-Browser Support**: Fallback to traditional downloads for older browsers
+- 📱 **Responsive Design**: Clean, professional UI that works on all devices
+- ⚡ **Streaming Architecture**: XMLHttpRequest streaming for optimal performance
+- 🛡️ **Error Recovery**: Comprehensive error handling with user-friendly messages
+- 🗂️ **Repository Browser**: Browse Artifactory repositories with intuitive folder navigation
+- 🎯 **One-Click Downloads**: Click files to instantly initiate downloadswnload Manager
 
 A secure, modern web application for downloading large files from Artifactory with real-time progress tracking and user-selectable save locations using XMLHttpRequest streaming and the HTML5 File System Access API.
 
@@ -22,21 +35,22 @@ A secure, modern web application for downloading large files from Artifactory wi
 │   Test Harness  │    │   Node.js Server │    │   Artifactory   │
 │   (test.html)   │────│   (server.js)    │────│     API         │
 └─────────────────┘    └──────────────────┘    └─────────────────┘
-                              │
-                       ┌──────────────────┐
-                       │ Download Manager │
-                       │ (download.html)  │
-                       │  XMLHttpRequest  │
-                       │    Streaming     │
-                       └──────────────────┘
+        │                      │
+┌─────────────────┐    ┌──────────────────┐
+│   Repo Browser  │    │ Download Manager │
+│  (browse.html)  │    │ (download.html)  │
+│   API Proxy     │    │  XMLHttpRequest  │
+│                 │    │    Streaming     │
+└─────────────────┘    └──────────────────┘
 ```
 
 ### Components
 
-1. **Test Harness** (`test.html`): Main interface for configuring downloads
-2. **Node.js Server** (`server.js`): Backend API with streaming proxy and token validation
-3. **Download Manager** (`public/download.html`): Popup interface with XMLHttpRequest streaming
-4. **Environment Config** (`.env`): Secure configuration for Artifactory credentials
+1. **Repository Browser** (`browse.html`): Standalone interface for browsing Artifactory repositories
+2. **Test Harness** (`test.html`): Interface for configuring downloads with specific file paths
+3. **Node.js Server** (`server.js`): Backend API with streaming proxy and token validation
+4. **Download Manager** (`views/download.html`): Popup interface with XMLHttpRequest streaming
+5. **Environment Config** (`.env`): Secure configuration for Artifactory credentials
 
 ### Streaming Architecture
 
@@ -116,7 +130,39 @@ PORT=3000
 
 ## Usage
 
-### Basic Download Flow
+### Repository Browser (`browse.html`)
+
+The repository browser provides an intuitive interface for exploring and downloading files:
+
+1. **Open the Browser**: 
+   - Open `browse.html` in your web browser (standalone file)
+   - Ensure the local server is running on `http://localhost:3000`
+
+2. **Configure Access**:
+   - Select Access Token from dropdown (FAA, FDS, EH, or Custom)
+   - Enter Repository name (default: "download")
+   - The Artifactory URL is pre-configured
+
+3. **Browse Repository**:
+   - Click "Browse" to load the root directory
+   - Click on folders (📁) to navigate into them
+   - Click on files (📄) to start download immediately
+   - Use "Go Up" to navigate to parent folder
+   - Use "Home" to return to root directory
+
+4. **Download Files**:
+   - Simply click on any file to launch the download manager
+   - The download manager opens in a popup window
+   - Files are downloaded with progress tracking
+
+**Features**:
+- Breadcrumb navigation showing current path
+- File sizes and modification dates
+- Folder/file icons for easy identification
+- Automatic path reset when token changes
+- CORS-free API calls via localhost proxy
+
+### Basic Download Flow (Test Harness)
 
 1. **Access the Application**: 
    - **Production**: Visit https://sap-fioneer-download-manager.cfapps.eu10-005.hana.ondemand.com
@@ -242,12 +288,13 @@ For local development, follow the Quick Start section above.
 ### Project Structure
 ```
 ├── server.js              # Express server with API endpoints
-├── test.html.example       # Test harness template (copy to test.html)
+├── browse.html            # Standalone repository browser (gitignored)
+├── test.html.example      # Test harness template (copy to test.html)
 ├── test.html              # Test harness (gitignored - contains tokens)
-├── manifest.yml            # Cloud Foundry deployment configuration
-├── public/
-│   ├── index.html          # Landing page (deployed)
-│   └── download.html       # Download manager popup
+├── manifest.yml           # Cloud Foundry deployment configuration
+├── views/
+│   ├── browse.html        # Repository browser (old version)
+│   └── download.html      # Download manager popup
 ├── package.json           # Node.js dependencies
 ├── .env.example           # Environment template
 ├── .env                   # Environment variables (gitignored)
@@ -399,6 +446,20 @@ For support and questions:
 - Review server logs for detailed error information
 
 ## Changelog
+
+### v2.0.0 (2025-01-XX) - Repository Browser
+- 🗂️ **Repository Browser**: Added standalone `browse.html` with intuitive folder navigation
+- 🎯 **One-Click Downloads**: Files now download instantly on click (no separate button needed)
+- 🔌 **API Proxy**: Added `/api/storage` endpoint to bypass CORS restrictions
+- 🍞 **Breadcrumb Navigation**: Visual path display showing current location
+- 🔄 **Smart Token Switching**: Path automatically resets to "/" when changing tokens
+- 📚 **Documentation**: Comprehensive JSDoc comments throughout browse.html
+- 🎨 **UI Consistency**: Rounded buttons (24px border-radius) matching SAP Fioneer style
+- 🧹 **Simplified Interface**: Removed on-screen status messages (console-only logging)
+- ❌ **Removed Features**: Copy-to-clipboard, separate download buttons (consolidated to click)
+- 🗑️ **Code Cleanup**: Removed unused endpoints (`/token`, `/token-attributes`, `/test`, `/browse`)
+- 🔧 **API Fix**: Corrected JFrog path from `/ui/native` to `/artifactory`
+- 🛡️ **CORS Solution**: Implemented proxy pattern for reliable browser-based API access
 
 ### v1.3.0 (2025-09-24) - UI/UX Enhancement
 - 🎨 **SAP Fioneer Branding**: Added complete SAP Fioneer logo integration to download interface

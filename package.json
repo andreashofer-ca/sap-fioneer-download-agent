@@ -10,7 +10,7 @@
   },
   "repository": {
     "type": "git",
-        "url": "git+https://github.com/Fioneer-Corporate/sap-fioneer-download-manager.git"
+    "url": "git+https://github.com/Fioneer-Corporate/sap-fioneer-download-manager.git"
   },
   "bugs": {
     "url": "https://github.com/Fioneer-Corporate/sap-fioneer-download-manager/issues"

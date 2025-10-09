@@ -234,7 +234,7 @@ app.get('/download-page', async (req, res) => {
 app.get('/download', async (req, res) => {
     try {
         // Get custom filename from query parameter or use default
-        const customFilename = req.query.filename || 'Fioneer AI Agent/REL/1.0.0/K-100COINFAA.SAR';
+        const customFilename = req.query.filename // 'Fioneer AI Agent/REL/1.0.0/K-100COINFAA.SAR';
 
         // Get token from Authorization header (secure approach)
         const authHeader = req.headers.authorization;
@@ -418,93 +418,87 @@ app.get('/health', (req, res) => {
     res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
 
-// Token endpoint - provides the .env token for initial loading
-app.get('/token', (req, res) => {
-    const token = process.env.ARTIFACTORY_TOKEN;
-    if (!token) {
-        return res.status(500).json({ error: 'No token configured in .env file' });
-    }
-    res.json({ token: token });
-});
-
-// Token attributes endpoint - proxy to Artifactory tokens API
+// JFrog API proxy endpoint - for browsing repositories
 /**
- * Proxies token attributes request to Artifactory
+ * Proxies JFrog File List API requests to Artifactory
  * 
- * This endpoint forwards token validation and attribute requests to Artifactory's
- * token API, allowing the client to verify token validity and permissions.
+ * This endpoint allows the browse page to make API calls without CORS issues
+ * by proxying requests through the backend server.
  * 
  * @param {Object} req - Express request object
  * @param {Object} req.headers - Request headers
  * @param {string} req.headers.authorization - Bearer token for authentication
+ * @param {Object} req.query - Query parameters
+ * @param {string} req.query.repository - Repository name
+ * @param {string} req.query.path - Path within the repository
  * @param {Object} res - Express response object
- * @returns {Promise<void>} Returns token attributes or error response
+ * @returns {Promise<void>} Returns repository contents or error response
  * 
  * @example
- * GET /token-attributes
+ * GET /api/storage?repository=download&path=/folder/subfolder
  * Authorization: Bearer jwt_token_here
  */
-app.get('/token-attributes', async (req, res) => {
+app.get('/api/storage', async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
-            return res.status(400).json({ error: 'Authorization header required' });
+            return res.status(401).json({ error: 'Authorization header required' });
         }
 
         const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+        const repository = req.query.repository;
+        const path = req.query.path || '';
+
+        if (!repository) {
+            return res.status(400).json({ error: 'Repository parameter is required' });
+        }
+
+        // Construct the Artifactory API URL
+        const apiUrl = `https://fioneer1.jfrog.io/artifactory/api/storage/${repository}${path}`;
         
-        console.log('=== TOKEN ATTRIBUTES REQUEST ===');
-        console.log('Fetching token attributes from Artifactory...');
+        console.log('=== JFROG API PROXY REQUEST ===');
+        console.log('Repository:', repository);
+        console.log('Path:', path);
+        console.log('API URL:', apiUrl);
+        console.log('Token:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');
         
         const response = await axios({
             method: 'GET',
-            url: 'https://fioneer1.jfrog.io/access/api/v1/tokens',
+            url: apiUrl,
             headers: {
                 'Authorization': `Bearer ${token}`,
                 'Accept': 'application/json'
-            }
+            },
+            timeout: 10000
         });
 
-        console.log('=== TOKEN ATTRIBUTES RESPONSE ===');
+        console.log('=== JFROG API PROXY RESPONSE ===');
         console.log('Status:', response.status);
-        console.log('Data:', JSON.stringify(response.data, null, 2));
-        
-        if (response.data && response.data.length > 0) {
-            console.log('=== TOKEN DETAILS ===');
-            response.data.forEach((tokenInfo, index) => {
-                console.log(`Token ${index + 1}:`);
-                console.log(`  Subject: ${tokenInfo.subject || 'N/A'}`);
-                console.log(`  Scope: ${tokenInfo.scope || 'N/A'}`);
-                console.log(`  Issued: ${tokenInfo.issued_at ? new Date(tokenInfo.issued_at * 1000).toLocaleString() : 'N/A'}`);
-                console.log(`  Expires: ${tokenInfo.expires_in ? new Date((tokenInfo.issued_at + tokenInfo.expires_in) * 1000).toLocaleString() : 'N/A'}`);
-                console.log(`  Token ID: ${tokenInfo.token_id || 'N/A'}`);
-                console.log('---');
-            });
-        }
-        console.log('=== END TOKEN ATTRIBUTES ===');
+        console.log('Children count:', response.data.children ? response.data.children.length : 0);
+        console.log('=== END API PROXY ===');
 
         res.json(response.data);
         
     } catch (error) {
-        console.error('=== TOKEN ATTRIBUTES ERROR ===');
+        console.error('=== JFROG API PROXY ERROR ===');
         console.error('Error message:', error.message);
         
         if (error.response) {
             console.error('Response status:', error.response.status);
             console.error('Response data:', error.response.data);
             res.status(error.response.status).json({ 
-                error: 'Token attributes request failed',
+                error: 'JFrog API request failed',
                 message: error.response.data || error.message,
                 status: error.response.status
             });
         } else {
             console.error('Network or other error:', error);
             res.status(500).json({ 
-                error: 'Token attributes request failed',
+                error: 'JFrog API request failed',
                 message: error.message
             });
         }
-        console.error('=== END TOKEN ATTRIBUTES ERROR ===');
+        console.error('=== END API PROXY ERROR ===');
     }
 });
 
