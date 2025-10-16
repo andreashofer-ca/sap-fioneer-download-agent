@@ -1,4 +1,5 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 const axios = require('axios');
 const path = require('path');
 require('dotenv').config();
@@ -8,6 +9,58 @@ const PORT = process.env.PORT || 3000;
 
 // Artifactory configuration
 const ARTIFACTORY_URL = process.env.ARTIFACTORY_URL;
+
+// Rate limiting configuration for security
+const generalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100, // Limit each IP to 100 requests per windowMs
+    message: {
+        error: 'Too many requests',
+        message: 'Too many requests from this IP, please try again later.',
+        code: 'RATE_LIMIT_EXCEEDED'
+    },
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Stricter rate limiting for authentication endpoints
+const authLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 20, // Limit each IP to 20 auth attempts per windowMs
+    message: {
+        error: 'Too many authentication attempts',
+        message: 'Too many authentication attempts from this IP, please try again later.',
+        code: 'AUTH_RATE_LIMIT_EXCEEDED'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Rate limiting for file downloads - prevent bandwidth abuse
+const downloadLimiter = rateLimit({
+    windowMs: 60 * 1000, // 1 minute
+    max: 10, // Limit each IP to 10 downloads per minute
+    message: {
+        error: 'Download rate limit exceeded',
+        message: 'Too many download requests from this IP, please wait before downloading more files.',
+        code: 'DOWNLOAD_RATE_LIMIT_EXCEEDED'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
+
+// Rate limiting for API endpoints - prevent upstream abuse
+const apiLimiter = rateLimit({
+    windowMs: 1 * 60 * 1000, // 1 minute
+    max: 30, // Limit each IP to 30 API calls per minute
+    message: {
+        error: 'API rate limit exceeded',
+        message: 'Too many API requests from this IP, please try again later.',
+        code: 'API_RATE_LIMIT_EXCEEDED'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 /**
  * SAP Fioneer Download Manager - Backend Server
@@ -22,18 +75,26 @@ const ARTIFACTORY_URL = process.env.ARTIFACTORY_URL;
  * - Server-side HTML injection for secure token handling
  * - Comprehensive error handling and logging
  * - Token validation and attribute checking
+ * - Enterprise-grade rate limiting protection
  *
  * Security Features:
+ * - Comprehensive rate limiting (DoS, brute force, bandwidth abuse protection)
  * - No token exposure in URLs (secure header-based auth)
  * - CORS restricted to specific allowed origins
- * - Input validation and sanitization
+ * - Input validation and sanitization with optimized regex patterns
  * - Secure headers for all responses
+ * - SSRF protection with repository allow-lists
+ * - ReDoS prevention through regex optimization
  *
  * @author SAP Fioneer Team
- * @version 1.1.0
+ * @version 1.3.0
  * @license MIT
+ * @updated 2025-10-16 - Added comprehensive rate limiting security protection
  * @updated 2025-01-18 - Code cleanup and documentation improvements
  */
+
+// Apply general rate limiting to all requests
+app.use(generalLimiter);
 
 // Configure allowed CORS origins for security
 const allowedOrigins = [
@@ -109,7 +170,7 @@ app.get('/', (req, res) => {
  * GET /download-page?filepath=path/to/file.sar
  * Authorization: Bearer jwt_token_here
  */
-app.get('/download-page', async (req, res) => {
+app.get('/download-page', authLimiter, async (req, res) => {
     // Get token from Authorization header OR query parameter (for popup compatibility)
     const authHeader = req.headers.authorization;
     let token = null;
@@ -216,6 +277,7 @@ app.get('/download-page', async (req, res) => {
  * - Applies secure CORS headers (restricted origins only)
  * - Sanitizes filenames to prevent path traversal
  * - Supports resumable downloads with Range headers
+ * - Rate limited to prevent bandwidth abuse
  *
  * @param {Object} req - Express request object
  * @param {Object} req.headers - Request headers
@@ -231,7 +293,7 @@ app.get('/download-page', async (req, res) => {
  * Authorization: Bearer jwt_token_here
  * Range: bytes=0-1023
  */
-app.get('/download', async (req, res) => {
+app.get('/download', downloadLimiter, async (req, res) => {
     try {
         // Get custom filename from query parameter or use default
         const customFilename = req.query.filename // 'Fioneer AI Agent/REL/1.0.0/K-100COINFAA.SAR';
@@ -246,7 +308,8 @@ app.get('/download', async (req, res) => {
             if (/https?:\/\//i.test(name)) return false;
             // Allow common file extensions (updated from SAR-only restriction)
             const allowedExtensions = /\.(SAR|ZIP|TAR|GZ|TGZ|JAR|WAR|EAR|CAR|PDF|TXT|LOG|XML|JSON|CSV|XLS|XLSX|DOC|DOCX|PPT|PPTX|PNG|JPG|JPEG|GIF|BMP|SVG|MP4|AVI|MOV|MP3|WAV|SQL|BAK|7Z|RAR)$/i;
-            if (!/^(?:[\w\s\-\.\/]+\/)*[\w\s\-\.]+/.test(name) || !allowedExtensions.test(name)) return false;
+            // More efficient path validation - avoid nested quantifiers
+            if (!/^[\w\s\-\.\/]*[\w\s\-\.]$/.test(name) || !allowedExtensions.test(name)) return false;
             // Limit length
             if (name.length > 200) return false;
             return true;
@@ -462,7 +525,7 @@ app.get('/health', (req, res) => {
  * GET /api/storage?repository=download&path=/folder/subfolder
  * Authorization: Bearer jwt_token_here
  */
-app.get('/api/storage', async (req, res) => {
+app.get('/api/storage', apiLimiter, async (req, res) => {
     try {
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {

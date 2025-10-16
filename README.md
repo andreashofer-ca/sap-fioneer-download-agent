@@ -354,9 +354,10 @@ All `.example` files are tracked in git and contain no sensitive information. Th
 
 ## Security Considerations
 
+- ✅ **Rate Limiting**: Comprehensive DoS and abuse protection with configurable limits
 - ✅ **Token Security**: Multiple authentication methods supported (Authorization headers, query parameters)
 - ✅ **CORS Protection**: Restricted to specific allowed origins including production deployment
-- ✅ **Input Validation**: File path and token validation
+- ✅ **Input Validation**: File path and token validation with regex optimization
 - ✅ **Error Handling**: Secure error messages without information leakage
 - ✅ **Environment Variables**: Sensitive data in environment configuration
 - ✅ **Template Files**: Sensitive files (.gitignored) with .example templates
@@ -385,6 +386,34 @@ All `.example` files are tracked in git and contain no sensitive information. Th
 - gitignored test files to prevent token exposure
 
 ### Security Features
+
+#### Rate Limiting Protection (v1.3.0) 🆕
+Enterprise-grade rate limiting to prevent abuse and DoS attacks:
+
+- **General Endpoints**: 100 requests per 15 minutes per IP
+  - Applies to all endpoints for baseline protection
+  - Prevents general DoS attacks and resource exhaustion
+
+- **Authentication Endpoints**: 20 requests per 15 minutes per IP
+  - Applied to `/download-page` endpoint
+  - Prevents brute force attacks against JWT validation
+  - Stricter limits for security-critical operations
+
+- **Download Endpoints**: 10 downloads per minute per IP
+  - Applied to `/download` endpoint
+  - Prevents bandwidth abuse and download flooding
+  - Protects against resource-intensive operations
+
+- **API Endpoints**: 30 requests per minute per IP
+  - Applied to `/api/storage` endpoint
+  - Prevents upstream service abuse (Artifactory)
+  - Protects against API reconnaissance attacks
+
+**Rate Limit Headers**: All responses include standard `RateLimit-*` headers for client awareness:
+- `RateLimit-Policy`: Window and limit configuration
+- `RateLimit-Limit`: Maximum requests allowed
+- `RateLimit-Remaining`: Requests remaining in current window
+- `RateLimit-Reset`: Seconds until window resets
 
 #### CORS Security (v1.2.0)
 - **Restricted Origins**: Only allows requests from trusted domains
