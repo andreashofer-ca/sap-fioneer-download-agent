@@ -244,8 +244,9 @@ app.get('/download', async (req, res) => {
             if (name.includes('..') || name.startsWith('/') || name.includes('\\')) return false;
             // Block URL attempts
             if (/https?:\/\//i.test(name)) return false;
-            // Only permit expected file extensions (optional; here: .SAR)
-            if (!/^(?:[\w\-\/]+\/)*[\w\-]+\.SAR$/i.test(name)) return false;
+            // Allow common file extensions (updated from SAR-only restriction)
+            const allowedExtensions = /\.(SAR|ZIP|TAR|GZ|TGZ|JAR|WAR|EAR|CAR|PDF|TXT|LOG|XML|JSON|CSV|XLS|XLSX|DOC|DOCX|PPT|PPTX|PNG|JPG|JPEG|GIF|BMP|SVG|MP4|AVI|MOV|MP3|WAV|SQL|BAK|7Z|RAR)$/i;
+            if (!/^(?:[\w\s\-\.\/]+\/)*[\w\s\-\.]+/.test(name) || !allowedExtensions.test(name)) return false;
             // Limit length
             if (name.length > 200) return false;
             return true;
