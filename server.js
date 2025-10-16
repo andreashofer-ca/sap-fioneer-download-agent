@@ -239,7 +239,7 @@ app.get('/download', async (req, res) => {
         // Validate the requested filename against expected patterns
         function isSafeFilename(name) {
             // Only allow relative paths, alphanumeric, dots, dashes, underscores, and slashes (NO ".." or // or backslash)
-            if (!name) return false;
+            if (typeof name !== 'string' || !name) return false;
             // Block absolute paths and traversal
             if (name.includes('..') || name.startsWith('/') || name.includes('\\')) return false;
             // Block URL attempts
