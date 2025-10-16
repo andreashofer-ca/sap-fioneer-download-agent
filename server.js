@@ -449,8 +449,22 @@ app.get('/api/storage', async (req, res) => {
         const repository = req.query.repository;
         const path = req.query.path || '';
 
+        // ALLOW-LIST: Only permit known repositories
+        const allowedRepositories = [
+            'download',       // Add your known repo names here
+            'public',
+            'secure'
+        ];
         if (!repository) {
             return res.status(400).json({ error: 'Repository parameter is required' });
+        }
+        if (!allowedRepositories.includes(repository)) {
+            return res.status(400).json({ error: 'Invalid repository name' });
+        }
+
+        // Optionally, check path for unsafe input
+        if (typeof path !== 'string' || path.includes('..')) {
+            return res.status(400).json({ error: 'Invalid path parameter' });
         }
 
         // Construct the Artifactory API URL
