@@ -236,6 +236,29 @@ app.get('/download', async (req, res) => {
         // Get custom filename from query parameter or use default
         const customFilename = req.query.filename // 'Fioneer AI Agent/REL/1.0.0/K-100COINFAA.SAR';
 
+        // Validate the requested filename against expected patterns
+        function isSafeFilename(name) {
+            // Only allow relative paths, alphanumeric, dots, dashes, underscores, and slashes (NO ".." or // or backslash)
+            if (!name) return false;
+            // Block absolute paths and traversal
+            if (name.includes('..') || name.startsWith('/') || name.includes('\\')) return false;
+            // Block URL attempts
+            if (/https?:\/\//i.test(name)) return false;
+            // Only permit expected file extensions (optional; here: .SAR)
+            if (!/^(?:[\w\-\/]+\/)*[\w\-]+\.SAR$/i.test(name)) return false;
+            // Limit length
+            if (name.length > 200) return false;
+            return true;
+        }
+        if (!isSafeFilename(customFilename)) {
+            console.error('ERROR: Invalid filename supplied for download:', customFilename);
+            return res.status(400).json({
+                error: 'Invalid filename',
+                message: 'The requested filename is not allowed. Please specify a valid file name.',
+                code: 'INVALID_FILENAME'
+            });
+        }
+
         // Get token from Authorization header (secure approach)
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
