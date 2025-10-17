@@ -2,6 +2,7 @@
 
 ## Security & Compliance Status
 
+[![CodeQL](https://github.com/Fioneer-Corporate/sap-fioneer-download-manager/actions/workflows/codeql.yml/badge.svg)](https://github.com/Fioneer-Corporate/sap-fioneer-download-manager/blob/main/.github/workflows/codeql.yml)
 [![JFrog SAST Scan](https://github.com/Fioneer-Corporate/sap-fioneer-download-manager/actions/workflows/jfrog-sast.yml/badge.svg)](https://github.com/Fioneer-Corporate/sap-fioneer-download-manager/blob/main/.github/workflows/jfrog-sast.yml)
 [![FOSSA Status](https://app.fossa.com/api/projects/custom%2B41201%2Fgithub.com%2Fandreashofer-ca%2Fsap-fioneer-download-agent.svg?type=shield)](https://app.fossa.com/projects/custom%2B41201%2Fgithub.com%2Fandreashofer-ca%2Fsap-fioneer-download-agent)
 
