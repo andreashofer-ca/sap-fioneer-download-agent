@@ -94,8 +94,9 @@ const apiLimiter = rateLimit({
  * - GET /api/storage     - Proxies JFrog API requests for repository browsing
  *
  * @author Andreas Hofer, SAP Fioneer
- * @version 2.1.0
+ * @version 2.1.1
  * @license MIT
+ * @updated 2025-10-17 - Fixed GHAS code scanning alerts (SSRF, XSS, path traversal)
  * @updated 2025-01-18 - Removed /secure-download endpoint, updated documentation
  * @updated 2025-10-16 - Added comprehensive rate limiting security protection
  */
@@ -230,6 +231,7 @@ app.get('/download-page', authLimiter, async (req, res) => {
     } catch (error) {
         console.log('ERROR: Token validation failed:', error.message);
         
+        // XSS Protection: Use static error messages only, never include error details in HTML
         if (error.response) {
             const status = error.response.status;
             if (status === 401) {
@@ -237,7 +239,9 @@ app.get('/download-page', authLimiter, async (req, res) => {
             } else if (status === 403) {
                 return res.status(403).send('<h1>Error: Access Denied</h1><p>The provided token does not have sufficient permissions.</p><p>Please use a token with appropriate access rights.</p>');
             } else {
-                return res.status(status).send(`<h1>Error: Token Validation Failed</h1><p>Artifactory returned status ${status}</p><p>Please check your token and try again.</p>`);
+                // Do NOT include status in HTML to prevent potential injection
+                console.error('Token validation failed with status:', status);
+                return res.status(status).send('<h1>Error: Token Validation Failed</h1><p>Unable to validate your access token.</p><p>Please check your token and try again.</p>');
             }
         } else {
             return res.status(500).send('<h1>Error: Token Validation Failed</h1><p>Unable to validate token with Artifactory.</p><p>Please try again later or check your network connection.</p>');
@@ -245,7 +249,16 @@ app.get('/download-page', authLimiter, async (req, res) => {
     }
     
     // Read the download.html template and inject the token and filepath
+    // Path Traversal Protection: Use hardcoded filename only
     const downloadPagePath = path.join(__dirname, 'views', 'download.html');
+    
+    // Additional security: Verify the resolved path is within expected directory
+    const resolvedPath = path.resolve(downloadPagePath);
+    const expectedDir = path.resolve(__dirname, 'views');
+    if (!resolvedPath.startsWith(expectedDir)) {
+        console.error('SECURITY: Path traversal attempt blocked');
+        return res.status(500).send('Error loading download page');
+    }
     
     const fs = require('fs');
     fs.readFile(downloadPagePath, 'utf8', (err, data) => {
@@ -254,18 +267,30 @@ app.get('/download-page', authLimiter, async (req, res) => {
             return res.status(500).send('Error loading download page');
         }
         
-        // Inject the token and filepath into the page
+        // Inject the token and filepath into the page with proper escaping
+        // HTML/JS Injection Protection: Escape single quotes, backslashes, newlines, and HTML special chars
+        const escapeForJS = (str) => {
+            return str
+                .replace(/\\/g, '\\\\')  // Escape backslashes first
+                .replace(/'/g, "\\'")     // Escape single quotes
+                .replace(/"/g, '\\"')     // Escape double quotes
+                .replace(/\n/g, '\\n')    // Escape newlines
+                .replace(/\r/g, '\\r')    // Escape carriage returns
+                .replace(/</g, '\\x3C')   // Escape < to prevent HTML injection
+                .replace(/>/g, '\\x3E');  // Escape > to prevent HTML injection
+        };
+        
         let modifiedHtml = data.replace(
             `// Variables to be injected by server
         const accessToken = null; // Will be replaced by server`,
             `// Variables to be injected by server
-        const accessToken = '${token.replace(/'/g, "\\'")}';`
+        const accessToken = '${escapeForJS(token)}';`
         );
 
-        // Also inject the filepath
+        // Also inject the filepath with proper escaping
         modifiedHtml = modifiedHtml.replace(
             '        const filename = null; // Will be replaced by server',
-            `        const filename = '${filePath.replace(/'/g, "\\'")}';`
+            `        const filename = '${escapeForJS(filePath)}';`
         );
         
         console.log('Token and filepath injected into download page successfully');
@@ -547,7 +572,7 @@ app.get('/api/storage', apiLimiter, async (req, res) => {
         const repository = req.query.repository;
         const path = req.query.path || '';
 
-        // ALLOW-LIST: Only permit known repositories
+        // SSRF PROTECTION: Strict allow-list for repositories
         const allowedRepositories = [
             'download',       // Add your known repo names here
             'public',
@@ -556,17 +581,32 @@ app.get('/api/storage', apiLimiter, async (req, res) => {
         if (!repository) {
             return res.status(400).json({ error: 'Repository parameter is required' });
         }
-        if (!allowedRepositories.includes(repository)) {
+        
+        // Validate repository name - only alphanumeric, dash, underscore
+        if (!/^[a-zA-Z0-9_-]+$/.test(repository) || !allowedRepositories.includes(repository)) {
+            console.warn(`SSRF attempt blocked: invalid repository "${repository}"`);
             return res.status(400).json({ error: 'Invalid repository name' });
         }
 
-        // Optionally, check path for unsafe input
-        if (typeof path !== 'string' || path.includes('..')) {
+        // SSRF PROTECTION: Strict path validation to prevent traversal and injection
+        if (typeof path !== 'string') {
+            return res.status(400).json({ error: 'Invalid path parameter' });
+        }
+        
+        // Normalize and validate path
+        const normalizedPath = path.replace(/\/+/g, '/'); // Replace multiple slashes
+        if (normalizedPath.includes('..') || 
+            normalizedPath.includes('\\') ||
+            /https?:\/\//i.test(normalizedPath) || // Block URL injection
+            normalizedPath.includes('@') || // Block username injection
+            normalizedPath.length > 500) { // Limit path length
+            console.warn(`SSRF attempt blocked: invalid path "${path}"`);
             return res.status(400).json({ error: 'Invalid path parameter' });
         }
 
-        // Construct the Artifactory API URL
-        const apiUrl = `https://fioneer1.jfrog.io/artifactory/api/storage/${repository}${path}`;
+        // Construct the Artifactory API URL with hardcoded domain (SSRF protection)
+        const JFROG_DOMAIN = 'fioneer1.jfrog.io';
+        const apiUrl = `https://${JFROG_DOMAIN}/artifactory/api/storage/${repository}${normalizedPath}`;
         
         console.log('=== JFROG API PROXY REQUEST ===');
         console.log('Repository:', repository);
