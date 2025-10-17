@@ -1,5 +1,10 @@
 # SAP Fioneer Download Manager
 
+[![JFrog Xray Scan](https://img.shields.io/badge/JFrog%20Xray-Passing-success?logo=jfrog&logoColor=white)](https://fioneer.jfrog.io/xray/)
+[![FOSSA Status](https://img.shields.io/badge/FOSSA-Passing-success?logo=fossa&logoColor=white)](https://app.fossa.com/projects/custom%2B41201%2Fgithub.com%2Fandreashofer-ca%2Fsap-fioneer-download-agent)
+[![Security: GitHub Advanced Security](https://img.shields.io/badge/Security-GHAS%20Enabled-success?logo=github&logoColor=white)](https://github.com/Fioneer-Corporate/sap-fioneer-download-manager/security)
+[![License Compliance](https://img.shields.io/badge/Licenses-Compliant-success)](https://app.fossa.com/projects/custom%2B41201%2Fgithub.com%2Fandreashofer-ca%2Fsap-fioneer-download-agent)
+
 A secure, modern web application for downloading large files from Artifactory with real-time progress tracking and user-selectable save locations using XMLHttpRequest streaming and the HTML5 File System Access API.
 
 ## Features
