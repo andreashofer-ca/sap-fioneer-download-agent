@@ -4,7 +4,6 @@
 
 [![CodeQL](https://github.com/Fioneer-Corporate/sap-fioneer-download-manager/actions/workflows/codeql.yml/badge.svg)](https://github.com/Fioneer-Corporate/sap-fioneer-download-manager/blob/main/.github/workflows/codeql.yml)
 [![JFrog SAST Scan](https://github.com/Fioneer-Corporate/sap-fioneer-download-manager/actions/workflows/jfrog-sast.yml/badge.svg)](https://github.com/Fioneer-Corporate/sap-fioneer-download-manager/blob/main/.github/workflows/jfrog-sast.yml)
-[![FOSSA Status](https://app.fossa.com/api/projects/custom%2B41201%2Fgithub.com%2Fandreashofer-ca%2Fsap-fioneer-download-agent.svg?type=shield)](https://app.fossa.com/projects/custom%2B41201%2Fgithub.com%2Fandreashofer-ca%2Fsap-fioneer-download-agent)
 
 A secure, modern web application for downloading large files from Artifactory with real-time progress tracking and user-selectable save locations using XMLHttpRequest streaming and the HTML5 File System Access API.
 
