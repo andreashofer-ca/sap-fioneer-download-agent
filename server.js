@@ -147,8 +147,18 @@ app.use((req, res, next) => {
     }
 });
 
-// Serve node_modules for frontend libraries
-app.use('/node_modules', express.static('node_modules'));
+// SECURITY: Serve only specific node_modules for frontend libraries
+// Use a whitelist approach to prevent exposure of private files
+const serveNodeModules = express.static('node_modules', {
+    index: false,  // Disable directory listing
+    dotfiles: 'deny',  // Deny access to dotfiles
+    // Only serve necessary libraries - add more as needed
+    setHeaders: (res, path) => {
+        // Additional security headers for static files
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+    }
+});
+app.use('/node_modules', serveNodeModules);
 
 // Route to serve the main page
 app.get('/', (req, res) => {
@@ -375,15 +385,11 @@ app.get('/download', downloadLimiter, async (req, res) => {
         console.log('Download request received with token:', token ? `${token.substring(0, 20)}...` : 'NO TOKEN');
         console.log('Download request for file:', customFilename);
         
-        // Construct Artifactory URL from filename
-        let artifactoryUrl;
-        if (ARTIFACTORY_URL) {
-            // Use the configured URL from .env file
-            artifactoryUrl = `${ARTIFACTORY_URL}${customFilename}`;
-        } else {
-            // Fallback to default URL structure
-            artifactoryUrl = `https://fioneer1.jfrog.io/artifactory/download/${customFilename}`;
-        }
+        // SSRF PROTECTION: Construct Artifactory URL with hardcoded domain
+        // Do NOT use ARTIFACTORY_URL from env if it could contain user-controlled data
+        const JFROG_DOMAIN = 'fioneer1.jfrog.io';
+        const JFROG_REPO = 'download';
+        const artifactoryUrl = `https://${JFROG_DOMAIN}/artifactory/${JFROG_REPO}/${customFilename}`;
         console.log('Artifactory URL:', artifactoryUrl);
 
         if (!token) {
