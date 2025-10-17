@@ -60,6 +60,17 @@ A secure, modern web application for downloading large files from Artifactory wi
 - **Progress**: Real-time progress events with accurate MB/GB tracking
 - **Memory**: Minimal memory footprint regardless of file size
 
+## Security Features
+
+### ️ Comprehensive Protection Stack
+
+- **Rate Limiting**: 4-tier protection against DoS and brute force attacks
+- **CORS Security**: Restricted origins with whitelist validation
+- **SSRF Protection**: Repository allow-lists prevent unauthorized access
+- **Input Validation**: ReDoS-optimized regex patterns and sanitization
+- **Token Security**: Authorization header preference with fallback handling
+- **Error Handling**: Secure error messages without information disclosure
+
 ## Quick Start
 
 ### Prerequisites
@@ -131,9 +142,9 @@ PORT=3000
 
 ## Usage
 
-### Repository Browser (`browse.html`)
+### Repository Browser
 
-The repository browser provides an intuitive interface for exploring and downloading files:
+The repository browser provides an intuitive interface for exploring and downloading files from Artifactory:
 
 #### Setup (First Time Only)
 
@@ -144,7 +155,7 @@ The repository browser provides an intuitive interface for exploring and downloa
 
 2. **Add Your Tokens**:
    - Open `browse.html` in a text editor
-   - Find the "ADD YOUR TOKENS HERE" section around line 324
+   - Find the "ADD YOUR TOKENS HERE" section
    - Add your tokens to the dropdown, for example:
    ```html
    <option value="cmVmdGtuOjAxOjAwMDAwMDAwMDA6...">My Token Name</option>
@@ -223,22 +234,40 @@ Comprehensive error messages for common issues:
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
+| `/` | GET | Service status and information |
 | `/health` | GET | Server health check |
-| `/download-page` | GET | Serves download manager with injected tokens |
-| `/download` | GET | Proxies file downloads from Artifactory |
-| `/token` | GET | Returns environment token (fallback) |
-| `/token-attributes` | GET | Validates token and returns attributes |
+| `/download-page` | GET | Serves download manager with injected token and filepath |
+| `/download` | GET | Proxies file downloads from Artifactory with streaming |
+| `/api/storage` | GET | Proxies JFrog API requests for repository browsing |
 
 ### Request Examples
 
-#### Download File
+#### Download a File via Download Page
 ```bash
-curl "http://localhost:3000/download?filename=path/to/file.ext&token=your_token"
+# Using query parameter (for popup compatibility)
+curl "http://localhost:3000/download-page?filepath=download/folder/file.sar&token=your_token_here"
+
+# Using Authorization header
+curl -H "Authorization: Bearer your_token_here" \
+     "http://localhost:3000/download-page?filepath=download/folder/file.sar"
 ```
 
-#### Check Token Attributes
+#### Stream Download a File
 ```bash
-curl -H "Authorization: Bearer your_token" http://localhost:3000/token-attributes
+curl -H "Authorization: Bearer your_token_here" \
+     "http://localhost:3000/download?filename=folder/file.sar" \
+     --output file.sar
+```
+
+#### Browse Repository via API Proxy
+```bash
+curl -H "Authorization: Bearer your_token_here" \
+     "http://localhost:3000/api/storage?repository=download&path=/folder/subfolder"
+```
+
+#### Check Server Health
+```bash
+curl "http://localhost:3000/health"
 ```
 
 ## Deployment
@@ -365,25 +394,28 @@ All `.example` files are tracked in git and contain no sensitive information. Th
 
 ### Security Notes for Customer-Facing Applications
 
-**Current Implementation**: The application currently passes tokens via query parameters for popup window compatibility. While this works well for internal use, consider these factors for customer-facing deployments:
+**Current Implementation**: The application passes tokens via query parameters for popup window compatibility. This approach is suitable for internal use but has some considerations for customer-facing deployments:
 
-**Query Parameter Risks**:
+**Query Parameter Method**:
 - Tokens appear in server access logs
 - Browser history may contain tokens
 - Referrer headers could leak tokens
 - URLs with tokens might be inadvertently shared
+- Security warnings are logged for audit trails
 
-**Alternative Approaches for Enhanced Security**:
+**Current Mitigations**:
+- HTTPS-only transmission in production
+- Restricted CORS origins
+- Console warnings when tokens passed via URL
+- gitignored configuration files prevent token exposure
+- Rate limiting protects against brute force attacks
+
+**Alternative Approaches for Future Enhancement**:
 - Session-based authentication with HTTP-only cookies
 - JWT tokens with shorter expiration times
 - Signed URLs with time-limited access
 - OAuth 2.0 flow integration
-
-**Current Mitigations**:
-- HTTPS-only transmission
-- Restricted CORS origins
-- No token logging in application code
-- gitignored test files to prevent token exposure
+- PostMessage-based token transmission (requires architecture changes)
 
 ### Security Features
 
@@ -504,6 +536,14 @@ For support and questions:
 - Review server logs for detailed error information
 
 ## Changelog
+
+### v2.1.0 (2025-01-18) - Code Cleanup and Documentation Update
+- 🗑️ **Removed Secure Download Endpoint**: Removed `/secure-download` endpoint (PostMessage-based) to simplify architecture
+- 📝 **Updated Documentation**: Comprehensive README update to reflect current implementation
+- 🔒 **Security Warnings**: Added console warnings when tokens passed via URL parameters
+- 🧹 **Simplified Codebase**: Focused on single token transmission method (URL query parameters)
+- 📚 **Enhanced API Documentation**: Updated endpoint documentation with accurate examples
+- ✅ **Documentation Accuracy**: Removed references to unused endpoints and features
 
 ### v2.0.0 (2025-01-XX) - Repository Browser
 - 🗂️ **Repository Browser**: Added standalone `browse.html` with intuitive folder navigation

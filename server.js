@@ -69,28 +69,35 @@ const apiLimiter = rateLimit({
  * from Artifactory with JWT authentication and streaming support.
  *
  * Key Features:
- * - JWT token-based authentication via Authorization headers
+ * - JWT token-based authentication via Authorization headers or query parameters
  * - Secure CORS configuration with restricted origins
  * - Streaming file downloads with progress support
  * - Server-side HTML injection for secure token handling
  * - Comprehensive error handling and logging
- * - Token validation and attribute checking
+ * - Repository browsing via API proxy
  * - Enterprise-grade rate limiting protection
  *
  * Security Features:
  * - Comprehensive rate limiting (DoS, brute force, bandwidth abuse protection)
- * - No token exposure in URLs (secure header-based auth)
+ * - Token security with Authorization header preference and query parameter fallback
  * - CORS restricted to specific allowed origins
  * - Input validation and sanitization with optimized regex patterns
  * - Secure headers for all responses
  * - SSRF protection with repository allow-lists
  * - ReDoS prevention through regex optimization
  *
- * @author SAP Fioneer Team
- * @version 1.3.0
+ * Endpoints:
+ * - GET /                 - Service information
+ * - GET /health          - Health check
+ * - GET /download-page   - Serves download manager with injected token/filepath
+ * - GET /download        - Streams file downloads from Artifactory
+ * - GET /api/storage     - Proxies JFrog API requests for repository browsing
+ *
+ * @author Andreas Hofer, SAP Fioneer
+ * @version 2.1.0
  * @license MIT
+ * @updated 2025-01-18 - Removed /secure-download endpoint, updated documentation
  * @updated 2025-10-16 - Added comprehensive rate limiting security protection
- * @updated 2025-01-18 - Code cleanup and documentation improvements
  */
 
 // Apply general rate limiting to all requests
@@ -152,6 +159,7 @@ app.get('/', (req, res) => {
 });
 
 // Route to serve the download page
+// Route to serve the download page
 /**
  * Serves the download page with injected token and filepath
  *
@@ -163,11 +171,12 @@ app.get('/', (req, res) => {
  * @param {string} req.headers.authorization - Bearer token for authentication
  * @param {Object} req.query - Query parameters
  * @param {string} req.query.filepath - Path of the file to download
+ * @param {string} [req.query.token] - Token as query parameter (fallback for popup compatibility)
  * @param {Object} res - Express response object
  * @returns {void} Sends the modified HTML page or error response
  *
  * @example
- * GET /download-page?filepath=path/to/file.sar
+ * GET /download-page?filepath=path/to/file.sar&token=jwt_token_here
  * Authorization: Bearer jwt_token_here
  */
 app.get('/download-page', authLimiter, async (req, res) => {
@@ -178,7 +187,9 @@ app.get('/download-page', authLimiter, async (req, res) => {
     if (authHeader && authHeader.startsWith('Bearer ')) {
         token = authHeader.substring(7); // Remove 'Bearer ' prefix
     } else if (req.query.token) {
+        // SECURITY WARNING: Query parameter tokens are less secure
         token = req.query.token; // Fallback to query parameter for popup windows
+        console.warn('SECURITY: Token passed via URL parameter - consider using Authorization header');
     }
     
     if (!token) {
